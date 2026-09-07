@@ -1,0 +1,39 @@
+# 依赖包与缓存目录
+node_modules/
+.pnp
+.pnp.js
+
+# 生产构建产物
+dist/
+build/
+*.local
+
+# 日志文件
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 绝密环境变量与云开发凭据（严禁入库）
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+tcb-service-account.json
+
+# 微信开发者工具本地生成文件
+client-miniapp/miniprogram_npm/
+client-miniapp/.tea/
+project.private.config.json
+
+# 编辑器与操作系统系统文件
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
