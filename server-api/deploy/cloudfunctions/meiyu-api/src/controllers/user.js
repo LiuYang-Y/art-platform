@@ -69,17 +69,39 @@ function toUserInfo(user) {
   };
 }
 
+/**
+ * 是否已配置微信小程序登录。
+ * WECHAT_APPID/SECRET 未配置或仍为占位符 your_wx_appid 时，
+ * 进入「演示登录」模式：跳过微信 code2Session，直登演示账号，
+ * 保证体验期发布/审核双端闭环真实落库；正式配置后自动切真实微信登录。
+ */
+function isWechatReady() {
+  const appid = process.env.WECHAT_APPID;
+  const secret = process.env.WECHAT_SECRET;
+  return Boolean(appid && secret && appid !== 'your_wx_appid');
+}
+
+/** 演示登录身份（默认 seed 中的林小满 openid，可用 DEV_LOGIN_OPENID 覆盖） */
+const DEV_LOGIN_OPENID = process.env.DEV_LOGIN_OPENID || 'seed_student_openid';
+
 /** POST /api/user/login */
 async function login(req, res) {
   const { code } = req.body || {};
-  if (!code) return fail(res, '缺少登录凭证 code', 400);
+  const wechatReady = isWechatReady();
 
   let session;
-  try {
-    session = await code2Session(code);
-  } catch (err) {
-    console.error('[user] code2Session 失败:', err.message);
-    return fail(res, err.message || '微信授权失败', 400);
+  if (!wechatReady) {
+    // 演示模式：无法调微信换取 openid，直接使用固定演示身份
+    console.warn('[user] 未配置微信登录（WECHAT_APPID 占位），演示登录身份:', DEV_LOGIN_OPENID);
+    session = { openid: DEV_LOGIN_OPENID };
+  } else {
+    if (!code) return fail(res, '缺少登录凭证 code', 400);
+    try {
+      session = await code2Session(code);
+    } catch (err) {
+      console.error('[user] code2Session 失败:', err.message);
+      return fail(res, err.message || '微信授权失败', 400);
+    }
   }
 
   try {
@@ -113,7 +135,11 @@ async function login(req, res) {
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
-    return success(res, { token, userInfo: toUserInfo(user), isNewUser }, '登录成功');
+    return success(
+      res,
+      { token, userInfo: toUserInfo(user), isNewUser, loginMode: wechatReady ? 'wechat' : 'dev' },
+      wechatReady ? '登录成功' : '演示模式登录成功（未配置微信 AppID）'
+    );
   } catch (err) {
     console.error('[user] 登录处理异常:', err);
     return fail(res, '登录失败，请稍后重试', 500);
