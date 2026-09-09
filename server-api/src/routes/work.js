@@ -18,6 +18,7 @@ const router = express.Router();
 const workController = require('../controllers/work');
 const { auth } = require('../middlewares/auth');
 const { success, fail } = require('../utils/response');
+const pgStorage = require('../utils/pgStorage');
 
 router.get('/list', workController.listWorks);
 router.get('/categories', workController.getCategories);
@@ -27,28 +28,17 @@ router.post('/create', auth, workController.createWork);
 router.post('/like', auth, workController.toggleLike);
 
 /* ------------------------------------------------------------------ */
-/* 图片上传（multer 磁盘存储到 server-api/uploads，静态托管于 /uploads） */
+/* 图片上传（优先 CloudBase PG 云存储 pgstore；未配置 token 时回退本地） */
 /* ------------------------------------------------------------------ */
 const UPLOAD_DIR = path.join(__dirname, '../../uploads');
 
-// 确保目录存在（首次访问自动创建）
+// 确保目录存在（本地回退与 /uploads 静态服务使用）
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-// 磁盘存储：随机文件名避免覆盖 & 防止路径穿越
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, UPLOAD_DIR);
-  },
-  filename(req, file, cb) {
-    const ext = (path.extname(file.originalname) || '.jpg').toLowerCase();
-    // 仅允许图片扩展名兜底
-    const safeExt = /^\.(jpe?g|png|gif|webp|bmp)$/.test(ext) ? ext : '.jpg';
-    const uniqueName = `${Date.now()}_${Math.random().toString(36).slice(-6)}${safeExt}`;
-    cb(null, uniqueName);
-  }
-});
+// 内存存储：云存储上传需要 Buffer；本地回退时再写盘
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -59,16 +49,40 @@ const upload = multer({
   }
 });
 
+/** 解析安全扩展名 */
+function safeExt(originalname, fallback) {
+  const ext = (path.extname(originalname || '') || fallback || '.jpg').toLowerCase();
+  return /^\.(jpe?g|png|gif|webp|bmp)$/.test(ext) ? ext : '.jpg';
+}
+
 /**
  * POST /api/work/upload （需鉴权）
- * multipart/form-data，字段名 file；返回 { url }
+ * multipart/form-data，字段名 file；返回 { url, filename }
+ * - 生产（云函数）：上传到 CloudBase PG 云存储，url 为公开可访问地址
+ * - 本地兜底：写 uploads 目录并由 Express /uploads 静态服务
  */
-router.post('/upload', auth, upload.single('file'), (req, res) => {
-  if (!req.file) return fail(res, '请选择要上传的图片文件', 400);
+router.post('/upload', auth, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return fail(res, '请选择要上传的图片文件', 400);
+    const ext = safeExt(req.file.originalname);
 
-  // 拼接本地可访问 URL（BASE 需与客户端 BASE_URL 的 host:port 一致）
-  const publicUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-  return success(res, { url: publicUrl, filename: req.file.filename }, '图片上传成功');
+    if (pgStorage.enabled()) {
+      const r = await pgStorage.uploadImage({
+        buffer: req.file.buffer,
+        mime: req.file.mimetype || 'image/jpeg',
+        ext
+      });
+      return success(res, { url: r.url, filename: r.objectKey }, '图片上传成功');
+    }
+
+    // 本地兜底：写入 uploads 目录
+    const filename = `${Date.now()}_${Math.random().toString(36).slice(-6)}${ext}`;
+    fs.writeFileSync(path.join(UPLOAD_DIR, filename), req.file.buffer);
+    const publicUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
+    return success(res, { url: publicUrl, filename }, '图片上传成功');
+  } catch (e) {
+    return fail(res, `图片上传失败：${e.message}`, 500);
+  }
 });
 
 module.exports = router;

@@ -41,6 +41,8 @@ project.private.config.json
 server-api/deploy/cloudfunctions/meiyu-api/node_modules/
 # 云函数环境变量临时文件（含密钥）
 server-api/deploy/.fn_env.json
+# 后端运行时上传产物（本地兜底目录，正式存储为 pgstore 云存储）
+server-api/uploads/
 # E2E 临时截图
 admin-web/e2e_*.png
 
