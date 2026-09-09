@@ -19,6 +19,8 @@ art-platform/
 - **沐光墙**：作品分类浏览（书法/绘画/摄影/手工/其他）、最新/最热排序、分页
 - **作品详情**：多图画廊、点赞（服务端 work_id+user_id 唯一约束去重）、两级留言
 - **发布审核**：发布 → 待审核 → 管理员通过/驳回（带原因）→ 前台可见（先审后发）
+- **图片云存储**：作品图上传 CloudBase pgstore 公共桶（`art-works`，5MB/图片白名单），返回公网可匿名访问 URL；本地开发未配置存储密钥时自动回退 `uploads/` 目录
+- **演示登录**：`WECHAT_APPID/SECRET` 未配置时 `/api/user/login` 自动进入演示模式（直登 seed 学员账号），发布→审核双端闭环真实落库；配置真实微信凭证后零改动切换为微信登录
 - **AI 润色**：创作说明一键润色（外部大模型 + 内置离线语料双引擎，8s 超时降级）
 - **内容安全**：标题/简介/留言服务端敏感词检测（G-06 可配置词库，42 条默认词）
 - **管理后台**：登录、数据工作台、作品审核、用户管理、课程管理、敏感词库
@@ -58,8 +60,9 @@ npm run dev                 # http://localhost:5173（/api 代理到 localhost:3
 | 网关 | 路由 `/api` → meiyu-api | enablePathTransmission=true（透传完整路径） |
 | 管理端 | 静态网站托管 | `VITE_API_BASE=<云函数域名>/api npm run build`，上传 `dist/`，404 回退 index.html |
 | 数据 | CloudBase PostgreSQL | 走 OpenAPI ExecutePGSql 通道，密钥放云函数环境变量 |
+| 图片存储 | pgstore 公共桶 `art-works` | service_role key（`PG_STORAGE_TOKEN`）+ RLS 匿名读，公网 URL 直接回填作品 `images` |
 
-密钥一律走环境变量（本地 `.env` / 云函数 envVariables），`.gitignore` 已排除 `.env`、`node_modules`、部署产物。
+密钥一律走环境变量（本地 `.env` / 云函数 envVariables），`.gitignore` 已排除 `.env`、`deploy/.fn_env.json`、`node_modules`、部署产物、运行时 `uploads/`。
 
 ## 接口约定
 
@@ -70,4 +73,4 @@ npm run dev                 # http://localhost:5173（/api 代理到 localhost:3
 
 ## 环境变量说明（server-api/.env）
 
-见 `.env.example` 注释。关键项：`TENCENT_ENV_ID`、`TENCENT_SECRET_ID/KEY`（CloudBase OpenAPI）、`JWT_SECRET`、`LLM_API_URL/KEY`（AI 润色，可选，缺省走内置离线引擎）、`PG_*`（直连通道，可选）。
+见 `.env.example` 注释。关键项：`TENCENT_ENV_ID`、`TENCENT_SECRET_ID/KEY`（CloudBase OpenAPI）、`JWT_SECRET`、`LLM_API_URL/KEY`（AI 润色，可选，缺省走内置离线引擎）、`PG_*`（直连通道，可选）、`PG_STORAGE_TOKEN/BUCKET`（pgstore 云存储上传，云函数环境变量注入）、`WECHAT_APPID/SECRET`（配置后启用真实微信登录）。
