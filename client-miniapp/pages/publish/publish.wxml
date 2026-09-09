@@ -1,0 +1,86 @@
+<view class="page {{fontMode === 'large' ? 'font-large' : ''}}">
+
+  <view class="form-card card">
+
+    <!-- 图片宫格选取器（最多 9 张，第一张为封面） -->
+    <view class="grid">
+      <view class="grid-item" wx:for="{{images}}" wx:key="path">
+        <image class="grid-img" src="{{item.path}}" mode="aspectFill" />
+        <view class="grid-del" data-index="{{index}}" catchtap="removeImage">✕</view>
+        <view wx:if="{{item.compressed}}" class="grid-flag">已压缩</view>
+      </view>
+
+      <view
+        wx:if="{{images.length < 9}}"
+        class="grid-item grid-add"
+        bindtap="addImage"
+        bindlongpress="addImageByCamera"
+      >
+        <text class="add-icon">＋</text>
+        <text class="add-text">长按拍照</text>
+        <text class="add-text">点击选择相册</text>
+      </view>
+    </view>
+    <view class="grid-tip">最多上传 9 张，第一张为封面 · 支持 JPG/PNG · 超标自动压缩</view>
+
+    <!-- 作品分类 -->
+    <view class="field-label">作品分类 <text class="req">*</text></view>
+    <view class="cat-row">
+      <view
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="cat-chip {{category === item.key ? 'cat-active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="pickCategory"
+      >{{item.name}}</view>
+    </view>
+
+    <!-- 作品标题 -->
+    <view class="field-label">作品标题 <text class="req">*</text></view>
+    <input
+      class="field-input"
+      placeholder="给作品起个名字吧"
+      placeholder-class="input-placeholder"
+      maxlength="30"
+      value="{{title}}"
+      bindinput="onTitleInput"
+    />
+
+    <!-- 作品简介 -->
+    <view class="field-label">作品简介</view>
+    <textarea
+      class="field-textarea"
+      placeholder="写下创作心得、使用材料、创作周期…（80~150 字更佳）"
+      placeholder-class="input-placeholder"
+      maxlength="300"
+      value="{{desc}}"
+      bindinput="onDescInput"
+    />
+    <view class="char-count">{{desc.length}}/300</view>
+
+    <!-- AI 润色（Z-04） -->
+    <view class="ai-row">
+      <view class="ai-btn {{polishing ? 'ai-busy' : ''}}" bindtap="polish">
+        {{polishing ? '润色中…' : '✦ AI 润色'}}
+      </view>
+      <input
+        class="kw-input"
+        placeholder="关键词，如：荷塘、晨光"
+        placeholder-class="input-placeholder"
+        value="{{keyword}}"
+        bindinput="onKeywordInput"
+      />
+    </view>
+    <view class="ai-tip">输入关键词，让 AI 帮你把简介写得更动人（8 秒超时自动降级手写）</view>
+  </view>
+
+  <!-- 底部操作：存草稿 / 提交审核 -->
+  <view class="footer">
+    <view class="btn-ghost draft-btn" bindtap="saveDraft">存草稿</view>
+    <view class="btn-primary submit-btn {{submitting ? 'btn-disabled' : ''}}" bindtap="submit">
+      发布 · 提交审核
+    </view>
+  </view>
+  <view class="footer-space safe-bottom"></view>
+
+</view>

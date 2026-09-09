@@ -1,0 +1,26 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/courses/courses",
+    "pages/publish/publish",
+    "pages/mine/mine",
+    "pages/detail/detail"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "沐光·美育平台",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#C84B31",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "沐光墙" },
+      { "pagePath": "pages/courses/courses", "text": "课程表" },
+      { "pagePath": "pages/publish/publish", "text": "发布" },
+      { "pagePath": "pages/mine/mine", "text": "我的" }
+    ]
+  }
+}

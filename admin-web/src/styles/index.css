@@ -1,0 +1,51 @@
+/* 沐光·美育 管理平台 全局样式
+   主色：靛蓝 #3D5A80 / #2F4A73；侧边栏深靛蓝 #243B55 → #1F2B3A
+   内容区白卡片、清爽排版 */
+
+:root {
+  --brand: #3D5A80;
+  --brand-deep: #243B55;
+  --brand-ink: #1F2B3A;
+  --brand-light: #EEF2F8;
+  --accent: #C84B31; /* 赭红点缀，呼应小程序 */
+  --ok: #2E9E6B;
+  --warn: #E8853D;
+  --page-bg: #F4F6FA;
+  --card: #fff;
+  --text: #2B3440;
+  --text-sub: #6B7684;
+  --border: #E4E9F0;
+
+  --el-color-primary: #3D5A80;
+  --el-color-success: #2E9E6B;
+  --el-color-warning: #E8853D;
+  --el-color-danger: #C84B31;
+  --el-border-radius-base: 8px;
+
+  font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; margin: 0; padding: 0; }
+body { background: var(--page-bg); color: var(--text); font-size: 14px; }
+
+/* 通用卡片 */
+.page-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: var(--brand-ink);
+}
+.page-sub {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin: 0 0 16px;
+}

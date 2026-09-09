@@ -1,0 +1,126 @@
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--space-md);
+}
+
+/* ---------- 周次切换器 ---------- */
+.week-switcher {
+  display: flex;
+  padding: var(--space-xs);
+}
+
+.week-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 108rpx;
+  padding: var(--space-xs) 0;
+  border-radius: var(--radius-sm);
+}
+
+.week-name {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--color-text-sub);
+}
+
+.week-range {
+  margin-top: 4rpx;
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}
+
+.week-active {
+  background-color: var(--color-primary-light);
+}
+
+.week-active .week-name {
+  color: var(--color-primary);
+}
+
+.week-active .week-range {
+  color: var(--color-primary);
+}
+
+.today-line {
+  padding: var(--space-sm) var(--space-xs) 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}
+
+/* ---------- 加载 / 空态 ---------- */
+.state-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 140rpx 40rpx;
+}
+
+.state-emoji {
+  font-size: 88rpx;
+}
+
+.state-text {
+  margin-top: var(--space-md);
+  font-size: var(--font-base);
+  color: var(--color-text-sub);
+}
+
+/* ---------- 课程卡片 ---------- */
+.course-list {
+  margin-top: var(--space-sm);
+}
+
+.course-card {
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+}
+
+.course-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.course-name {
+  flex: 1;
+  margin-right: var(--space-sm);
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.35;
+}
+
+.course-tag {
+  flex-shrink: 0;
+  padding: 4rpx 20rpx;
+  font-size: var(--font-sm);
+  border-radius: 999rpx;
+}
+
+.course-info {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: var(--space-xs);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  line-height: 1.6;
+}
+
+.info-item {
+  margin-right: var(--space-md);
+}
+
+.course-desc {
+  margin-top: var(--space-xs);
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}

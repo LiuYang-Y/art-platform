@@ -1,0 +1,151 @@
+<view class="page {{fontMode === 'large' ? 'font-large' : ''}}">
+
+  <!-- 搜索框：搜索作品、作者 -->
+  <view class="search-bar">
+    <text class="search-icon">🔍</text>
+    <input
+      class="search-input"
+      placeholder="搜索作品、作者"
+      placeholder-class="search-placeholder"
+      value="{{searchInput}}"
+      confirm-type="search"
+      bindinput="onSearchInput"
+      bindconfirm="onSearchConfirm"
+    />
+    <view wx:if="{{searchInput}}" class="search-clear touch-target" catchtap="clearSearch">✕</view>
+  </view>
+
+  <!-- 分类横滑栏：全部/书法/绘画/摄影/手工/其他艺术 -->
+  <scroll-view class="cat-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="cat-row">
+      <view
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="cat-chip {{activeCategory === item.key ? 'cat-active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="switchCategory"
+      >{{item.name}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 排序切换：最新 / 最热 -->
+  <view class="sort-row">
+    <view class="sort-seg">
+      <view class="sort-item {{sortMode === 'new' ? 'sort-active' : ''}}" data-sort="new" bindtap="switchSort">最新</view>
+      <view class="sort-item {{sortMode === 'hot' ? 'sort-active' : ''}}" data-sort="hot" bindtap="switchSort">最热</view>
+    </view>
+    <text wx:if="{{keyword}}" class="search-tip">"{{keyword}}" 的搜索结果</text>
+  </view>
+
+  <!-- 双列瀑布流 -->
+  <view class="waterfall" wx:if="{{!isEmpty}}">
+    <view class="column">
+      <view
+        wx:for="{{leftList}}"
+        wx:key="id"
+        class="work-card"
+        data-id="{{item.id}}"
+        bindtap="goDetail"
+      >
+        <view class="cover-box" style="padding-bottom: {{item.aspect * 100}}%;">
+          <image
+            wx:if="{{item.coverUrl}}"
+            class="cover-img"
+            src="{{item.coverUrl}}"
+            mode="aspectFill"
+            lazy-load
+          />
+          <view
+            wx:else
+            class="cover-ph"
+            style="background: linear-gradient(160deg, {{item.coverMeta.gradient[0]}}, {{item.coverMeta.gradient[1]}});"
+          >
+            <text class="ph-emoji">{{item.coverMeta.emoji}}</text>
+          </view>
+        </view>
+
+        <view class="card-body">
+          <view class="card-title">{{item.title}}</view>
+          <view class="card-meta">
+            <text class="card-author">{{item.authorName}}</text>
+            <text wx:if="{{item.categoryName}}" class="card-cat">· {{item.categoryName}}</text>
+          </view>
+        </view>
+
+        <view class="card-foot">
+          <view
+            class="like touch-target {{item.liked ? 'liked' : ''}}"
+            data-id="{{item.id}}"
+            catchtap="handleLike"
+          >
+            <text class="like-icon {{item._pop ? 'like-pop' : ''}}">{{item.liked ? '♥' : '♡'}}</text>
+            <text class="like-count">{{item.likeCountText}}</text>
+            <text wx:if="{{item._plus}}" class="like-float">+1</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="column">
+      <view
+        wx:for="{{rightList}}"
+        wx:key="id"
+        class="work-card"
+        data-id="{{item.id}}"
+        bindtap="goDetail"
+      >
+        <view class="cover-box" style="padding-bottom: {{item.aspect * 100}}%;">
+          <image
+            wx:if="{{item.coverUrl}}"
+            class="cover-img"
+            src="{{item.coverUrl}}"
+            mode="aspectFill"
+            lazy-load
+          />
+          <view
+            wx:else
+            class="cover-ph"
+            style="background: linear-gradient(160deg, {{item.coverMeta.gradient[0]}}, {{item.coverMeta.gradient[1]}});"
+          >
+            <text class="ph-emoji">{{item.coverMeta.emoji}}</text>
+          </view>
+        </view>
+
+        <view class="card-body">
+          <view class="card-title">{{item.title}}</view>
+          <view class="card-meta">
+            <text class="card-author">{{item.authorName}}</text>
+            <text wx:if="{{item.categoryName}}" class="card-cat">· {{item.categoryName}}</text>
+          </view>
+        </view>
+
+        <view class="card-foot">
+          <view
+            class="like touch-target {{item.liked ? 'liked' : ''}}"
+            data-id="{{item.id}}"
+            catchtap="handleLike"
+          >
+            <text class="like-icon {{item._pop ? 'like-pop' : ''}}">{{item.liked ? '♥' : '♡'}}</text>
+            <text class="like-count">{{item.likeCountText}}</text>
+            <text wx:if="{{item._plus}}" class="like-float">+1</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空态 -->
+  <view class="empty" wx:if="{{isEmpty && !loading}}">
+    <text class="empty-emoji">🎨</text>
+    <view class="empty-text">{{keyword ? '没有找到相关作品' : '还没有作品'}}</view>
+    <view class="empty-sub">{{keyword ? '换个关键词试试，或去发布第一件作品' : '发布第一件作品，开启美育展示'}}</view>
+  </view>
+
+  <!-- 底部加载状态 -->
+  <view class="footer-tip" wx:if="{{!isEmpty}}">
+    <text wx:if="{{loading}}">正在加载…</text>
+    <text wx:elif="{{!hasMore}}">— 到底啦 —</text>
+    <text wx:else>上拉加载更多</text>
+  </view>
+
+</view>

@@ -1,0 +1,252 @@
+/**
+ * 全局样式与设计变量
+ * ------------------------------------------------------------
+ * 设计基调（对齐最终版原型 图 5-1 ~ 5-6）：
+ *   暖米色底 + 白色卡片 + 红橙点缀（#C84B31 / #E8853D）
+ * 适老化规范（Z-10）：
+ *   基础字号 ≥ 18px，可点击热区 ≥ 48px；
+ *   「我的」页可切换大字模式（基础字号 ≥ 22px）
+ */
+
+page {
+  /* ---------- 字号规范（一律 ≥ 18px） ---------- */
+  --font-sm: 18px;          /* 辅助说明（不小于正文） */
+  --font-base: 18px;        /* 正文字号 */
+  --font-lg: 21px;          /* 区块标题 */
+  --font-xl: 26px;          /* 页面主标题 */
+  --font-xxl: 34px;         /* 统计大数字 */
+
+  /* ---------- 可点击热区 ---------- */
+  --touch-min: 48px;        /* 最小可点击尺寸 48×48px */
+
+  /* ---------- 主题色：暖米色 + 红橙 ---------- */
+  --color-primary: #C84B31;       /* 主色 赭红 */
+  --color-primary-deep: #A93A26;
+  --color-primary-light: #FBEDE8;
+  --color-accent: #E8853D;        /* 点缀色 橙 */
+  --color-accent-light: #FCF0E4;
+  --color-like: #E0503C;          /* 点赞红心 */
+
+  /* ---------- 中性色 ---------- */
+  --color-text: #2E2823;
+  --color-text-sub: #796F63;
+  --color-text-weak: #A89C8D;
+  --color-bg: #F3EFE6;            /* 暖米色底 */
+  --color-card: #FFFFFF;
+  --color-border: #E9E2D5;
+
+  /* ---------- 审核状态色（绿 / 黄 / 红） ---------- */
+  --status-approved: #43905B;
+  --status-approved-bg: #E8F4EC;
+  --status-pending: #B07B1A;
+  --status-pending-bg: #FBF1D9;
+  --status-rejected: #C2453A;
+  --status-rejected-bg: #FAE7E3;
+
+  /* ---------- 间距与圆角 ---------- */
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-card: 0 4rpx 16rpx rgba(96, 70, 44, 0.07);
+
+  font-size: var(--font-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+}
+
+/* ---------- 大字模式（Z-10：≥22px），页面根节点挂 .font-large ---------- */
+.font-large {
+  --font-sm: 22px;
+  --font-base: 22px;
+  --font-lg: 25px;
+  --font-xl: 30px;
+  --font-xxl: 40px;
+}
+
+/* ---------- 通用容器 ---------- */
+.container {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--space-md);
+}
+
+/* ---------- 最小热区：任何可点击元素不小于 48×48px ---------- */
+.touch-target {
+  box-sizing: border-box;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background-color: var(--color-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* ---------- 按钮 ---------- */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-lg);
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-size: var(--font-base);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: none;
+  line-height: 1.4;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+.btn-primary.btn-disabled {
+  opacity: 0.5;
+}
+
+.btn-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-lg);
+  background-color: var(--color-card);
+  color: var(--color-text-sub);
+  font-size: var(--font-base);
+  border-radius: var(--radius-sm);
+  border: 2rpx solid var(--color-border);
+  line-height: 1.4;
+}
+
+.btn-ghost::after {
+  border: none;
+}
+
+/* ---------- 审核状态标签（绿 / 黄 / 红） ---------- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4rpx 20rpx;
+  font-size: var(--font-sm);
+  border-radius: 999rpx;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.tag-approved {
+  color: var(--status-approved);
+  background-color: var(--status-approved-bg);
+}
+
+.tag-pending {
+  color: var(--status-pending);
+  background-color: var(--status-pending-bg);
+}
+
+.tag-rejected {
+  color: var(--status-rejected);
+  background-color: var(--status-rejected-bg);
+}
+
+/* ---------- 区块标题 ---------- */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-xs) var(--space-sm);
+}
+
+.section-title {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.section-extra {
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}
+
+/* ---------- 文字辅助 ---------- */
+.text-sub {
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.text-weak {
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}
+
+/* ---------- 头像占位（首字母圆形） ---------- */
+.avatar-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---------- 封面占位（演示数据：渐变 + 分类 emoji） ---------- */
+.cover-ph {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ph-emoji {
+  font-size: 64rpx;
+  opacity: 0.9;
+}
+
+/* ---------- 点赞动效 ---------- */
+@keyframes like-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.45); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.like-pop {
+  animation: like-pop 0.45s ease-in-out;
+}
+
+@keyframes like-float {
+  0% { transform: translateY(0) scale(0.8); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: translateY(-56rpx) scale(1.15); opacity: 0; }
+}
+
+.like-float {
+  position: absolute;
+  top: -12rpx;
+  right: -6rpx;
+  color: var(--color-like);
+  font-size: var(--font-base);
+  font-weight: 700;
+  pointer-events: none;
+  animation: like-float 0.7s ease-out forwards;
+}
+
+/* ---------- 底部安全区 ---------- */
+.safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom) + var(--space-sm));
+}

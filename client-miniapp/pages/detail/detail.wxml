@@ -1,0 +1,158 @@
+<view class="page {{fontMode === 'large' ? 'font-large' : ''}}">
+
+  <!-- 加载中 -->
+  <view class="state-wrap" wx:if="{{loading}}">
+    <text class="state-text">正在加载作品…</text>
+  </view>
+
+  <!-- 加载失败 -->
+  <view class="state-wrap" wx:elif="{{loadError || !work}}">
+    <text class="state-emoji">🖼️</text>
+    <text class="state-text">作品不存在或加载失败</text>
+  </view>
+
+  <block wx:else>
+    <!-- 画廊：1~9 张图轮播，点击全屏预览 -->
+    <view class="gallery">
+      <swiper class="gallery-swiper" circular="{{imgTotal > 1}}" bindchange="onSwiperChange">
+        <swiper-item wx:for="{{swiperItems}}" wx:key="idx">
+          <image
+            wx:if="{{item.url}}"
+            class="gallery-img"
+            src="{{item.url}}"
+            mode="aspectFill"
+            bindtap="previewImage"
+          />
+          <view
+            wx:else
+            class="gallery-ph"
+            style="background: linear-gradient(160deg, {{item.gradient[0]}}, {{item.gradient[1]}});"
+            bindtap="previewImage"
+          >
+            <text class="gallery-emoji">{{item.emoji}}</text>
+            <text class="gallery-label">{{item.label}}</text>
+          </view>
+        </swiper-item>
+      </swiper>
+      <view class="gallery-count" wx:if="{{imgTotal > 1}}">{{current + 1}}/{{imgTotal}}</view>
+    </view>
+
+    <view class="info-wrap">
+      <!-- 标题 + 审核状态 -->
+      <view class="title-row">
+        <text class="work-title">{{work.title}}</text>
+        <text wx:if="{{statusText}}" class="tag {{statusClass}}">{{statusText}}</text>
+      </view>
+
+      <!-- 作者信息卡片 -->
+      <view class="author-card card">
+        <view class="avatar-ph author-avatar">{{work.authorName[0]}}</view>
+        <view class="author-info">
+          <text class="author-name">{{work.authorName}}</text>
+          <text wx:if="{{work.authorClass}}" class="author-class">{{work.authorClass}}</text>
+        </view>
+        <view class="follow-btn {{followed ? 'followed' : ''}}" bindtap="toggleFollow">
+          {{followed ? '已关注' : '+ 关注'}}
+        </view>
+      </view>
+
+      <!-- 创作说明：典雅排版 -->
+      <view class="desc-card card">
+        <view class="desc-title">创作说明</view>
+        <view class="desc-body">{{work.description || '作者很神秘，什么也没有留下。'}}</view>
+        <view class="desc-meta">
+          <text>{{createTimeText}}</text>
+          <text wx:if="{{categoryName}}"> · {{categoryName}}</text>
+          <text> · {{work.viewCount || 0}} 次浏览</text>
+        </view>
+      </view>
+
+      <!-- 互动行：点赞 / 收藏 / 分享 -->
+      <view class="action-row card">
+        <view class="like-pill {{work.liked ? 'liked' : ''}}" bindtap="handleLike">
+          <text class="like-heart {{likeAnim ? 'like-pop' : ''}}">{{work.liked ? '♥' : '♡'}}</text>
+          <text class="like-num">{{work.likeCount || 0}}</text>
+          <text wx:if="{{showPlus}}" class="like-float">+1</text>
+        </view>
+        <view class="fav-pill {{favorited ? 'faved' : ''}}" bindtap="toggleFavorite">
+          <text>{{favorited ? '⭐' : '☆'}} 收藏 {{favoriteCount}}</text>
+        </view>
+        <button class="share-pill" open-type="share">分享</button>
+      </view>
+
+      <!-- 留言列表 -->
+      <view class="section-head">
+        <text class="section-title">留言 {{commentTotal}}</text>
+      </view>
+      <view class="comment-card card">
+        <view wx:if="{{!comments.length}}" class="comment-empty">
+          还没有留言，来抢沙发鼓励一下作者吧～
+        </view>
+
+        <view class="comment-item" wx:for="{{comments}}" wx:key="id">
+          <view class="avatar-ph comment-avatar">{{item.userName[0]}}</view>
+          <view class="comment-main">
+            <view class="comment-head">
+              <text class="comment-name">{{item.userName}}</text>
+              <text wx:if="{{item.isAuthorReply}}" class="author-badge">作者回复</text>
+            </view>
+            <view class="comment-content">{{item.content}}</view>
+            <view class="comment-foot">
+              <text class="comment-time">{{item.timeText}}</text>
+              <text
+                class="comment-reply-btn"
+                data-id="{{item.id}}"
+                data-name="{{item.userName}}"
+                catchtap="setReplyTo"
+              >回复</text>
+            </view>
+
+            <!-- 一层嵌套回复 -->
+            <view class="reply-list" wx:if="{{item.replies.length}}">
+              <view class="reply-item" wx:for="{{item.replies}}" wx:for-item="reply" wx:key="id">
+                <view class="comment-head">
+                  <text class="comment-name">{{reply.userName}}</text>
+                  <text wx:if="{{reply.isAuthorReply}}" class="author-badge">作者回复</text>
+                </view>
+                <view class="comment-content">{{reply.content}}</view>
+                <view class="comment-foot">
+                  <text class="comment-time">{{reply.timeText}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="bottom-space"></view>
+    </view>
+
+    <!-- 底部固定留言栏 -->
+    <view class="comment-bar">
+      <scroll-view class="quick-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="quick-row">
+          <view
+            wx:for="{{quickPhrases}}"
+            wx:key="*this"
+            class="quick-chip"
+            data-text="{{item}}"
+            bindtap="pickQuick"
+          >{{item}}</view>
+        </view>
+      </scroll-view>
+      <view class="input-row safe-bottom">
+        <input
+          class="comment-input"
+          placeholder="{{replyTo ? '回复 @' + replyTo.name + '：' : '说点什么，鼓励一下作者'}}"
+          placeholder-class="input-placeholder"
+          value="{{inputValue}}"
+          confirm-type="send"
+          bindinput="onCommentInput"
+          bindconfirm="sendComment"
+        />
+        <view wx:if="{{replyTo}}" class="cancel-reply" bindtap="cancelReply">取消</view>
+        <view class="send-btn {{inputValue ? '' : 'send-disabled'}}" bindtap="sendComment">发送</view>
+      </view>
+    </view>
+  </block>
+</view>

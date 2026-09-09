@@ -1,0 +1,309 @@
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--space-md);
+}
+
+/* ---------- 资料卡 ---------- */
+.profile-card {
+  display: flex;
+  align-items: center;
+  padding: var(--space-md);
+}
+
+.avatar-btn {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  width: 128rpx;
+  height: 128rpx;
+  background-color: transparent;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.profile-avatar {
+  width: 128rpx;
+  height: 128rpx;
+  font-size: 52rpx;
+  display: block;
+}
+
+.avatar-badge {
+  position: absolute;
+  right: -6rpx;
+  bottom: -6rpx;
+  width: 52rpx;
+  height: 52rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  background-color: var(--color-card);
+  border-radius: 50%;
+  box-shadow: var(--shadow-card);
+}
+
+.profile-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--space-md);
+}
+
+.profile-name {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.profile-sub {
+  margin-top: 6rpx;
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}
+
+/* ---------- 成就统计 ---------- */
+.stats-card {
+  display: flex;
+  align-items: center;
+  margin-top: var(--space-md);
+  padding: var(--space-md) 0;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: var(--touch-min);
+}
+
+.stat-num {
+  font-size: var(--font-xxl);
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+
+.stat-label {
+  margin-top: 6rpx;
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+}
+
+.stat-divider {
+  width: 2rpx;
+  height: 64rpx;
+  background-color: var(--color-border);
+}
+
+/* ---------- 资料行 ---------- */
+.rows-card {
+  margin-top: var(--space-md);
+  padding: 0 var(--space-md);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 104rpx;
+  border-bottom: 2rpx solid var(--color-border);
+}
+
+.rows-card .row:last-child {
+  border-bottom: none;
+}
+
+.row-label {
+  font-size: var(--font-base);
+  color: var(--color-text);
+}
+
+.row-input {
+  flex: 1;
+  min-height: var(--touch-min);
+  margin-left: var(--space-md);
+  text-align: right;
+  font-size: var(--font-base);
+  color: var(--color-text);
+}
+
+.row-value {
+  margin-left: var(--space-md);
+  font-size: var(--font-base);
+  color: var(--color-text-sub);
+}
+
+.input-placeholder {
+  color: var(--color-text-weak);
+}
+
+.chev {
+  font-size: var(--font-xl);
+  color: var(--color-text-weak);
+}
+
+/* ---------- 审核状态追踪 ---------- */
+.track-card {
+  padding: 0 var(--space-md);
+}
+
+.track-empty {
+  padding: var(--space-lg) 0;
+  text-align: center;
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}
+
+.track-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-sm) 0;
+  border-bottom: 2rpx solid var(--color-border);
+  min-height: var(--touch-min);
+}
+
+.track-item:last-child {
+  border-bottom: none;
+}
+
+.track-thumb {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.track-thumb-img,
+.track-thumb-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.track-thumb-emoji {
+  font-size: 44rpx;
+}
+
+.track-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0 var(--space-sm);
+}
+
+.track-title {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-note {
+  margin-top: 6rpx;
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 我的作品瀑布流 ---------- */
+.waterfall {
+  display: flex;
+}
+
+.column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.column:first-child {
+  margin-right: 20rpx;
+}
+
+.work-card {
+  margin-bottom: 20rpx;
+  background-color: var(--color-card);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.cover-box {
+  position: relative;
+  width: 100%;
+}
+
+.cover-img,
+.cover-ph {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cover-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ph-emoji {
+  font-size: 64rpx;
+  opacity: 0.92;
+}
+
+.work-body {
+  padding: var(--space-sm);
+}
+
+.work-title {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.work-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-xs);
+}
+
+.work-time {
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}
+
+/* ---------- 设置 ---------- */
+.setting-card {
+  margin-top: var(--space-lg);
+}
+
+.copyright {
+  padding: var(--space-lg) 0;
+  text-align: center;
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}

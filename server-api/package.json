@@ -1,0 +1,29 @@
+{
+  "name": "server-api",
+  "version": "1.0.0",
+  "description": "高校美育成果展示与交流平台 - 后端服务中枢",
+  "main": "src/app.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "nodemon",
+    "start": "node src/app.js"
+  },
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.18.3",
+    "axios": "^1.20.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.3.0",
+    "pg": "^8.23.0",
+    "tencentcloud-sdk-nodejs-tcb": "^4.1.307"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

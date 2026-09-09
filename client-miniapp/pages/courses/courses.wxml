@@ -1,0 +1,56 @@
+<view class="page {{fontMode === 'large' ? 'font-large' : ''}}">
+
+  <!-- 顶部周次切换器：上周 / 本周 / 下周 -->
+  <view class="week-switcher card">
+    <view
+      wx:for="{{weeks}}"
+      wx:key="offset"
+      class="week-item {{item.active ? 'week-active' : ''}}"
+      data-offset="{{item.offset}}"
+      bindtap="switchWeek"
+    >
+      <text class="week-name">{{item.name}}</text>
+      <text class="week-range">{{item.range}}</text>
+    </view>
+  </view>
+  <view class="today-line">今天 · {{todayText}}</view>
+
+  <!-- 加载中 -->
+  <view class="state-wrap" wx:if="{{loading}}">
+    <text class="state-text">正在加载课程…</text>
+  </view>
+
+  <!-- 空态 -->
+  <view class="state-wrap" wx:elif="{{empty}}">
+    <text class="state-emoji">📅</text>
+    <text class="state-text">该周暂无美育课程安排</text>
+  </view>
+
+  <!-- 课程卡片列表 -->
+  <view class="course-list" wx:else>
+    <view
+      class="course-card card"
+      wx:for="{{courses}}"
+      wx:key="id"
+      style="border-left: 10rpx solid {{item.color}};"
+      data-id="{{item.id}}"
+      bindtap="showDetail"
+    >
+      <view class="course-top">
+        <text class="course-name">{{item.courseName}}</text>
+        <text class="course-tag" style="color: {{item.color}}; background-color: {{item.color}}1A;">{{item.catName}}</text>
+      </view>
+
+      <view class="course-info">
+        <text class="info-item">时间：{{item.dayName}} {{item.timeText}}</text>
+      </view>
+      <view class="course-info">
+        <text class="info-item">教师：{{item.teacherName}}</text>
+        <text class="info-item">地点：{{item.location}}</text>
+      </view>
+
+      <view class="course-desc">{{item.description}}</view>
+    </view>
+  </view>
+
+</view>

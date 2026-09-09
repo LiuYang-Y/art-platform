@@ -1,0 +1,177 @@
+<view class="page {{fontMode === 'large' ? 'font-large' : ''}}">
+
+  <!-- 资料卡（Z-09） -->
+  <view class="profile-card card">
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="chooseAvatar">
+      <image
+        wx:if="{{userInfo.avatarUrl}}"
+        class="profile-avatar"
+        src="{{userInfo.avatarUrl}}"
+        mode="aspectFill"
+      />
+      <view wx:else class="avatar-ph profile-avatar">{{userInfo.nickName[0]}}</view>
+      <view class="avatar-badge">📷</view>
+    </button>
+    <view class="profile-main">
+      <text class="profile-name">{{userInfo.nickName}}</text>
+      <text class="profile-sub">微信用户 · 已登录 · 点击头像可更换</text>
+    </view>
+  </view>
+
+  <!-- 成就统计中心（Z-07） -->
+  <view class="stats-card card">
+    <view class="stat-item">
+      <text class="stat-num">{{stats.works}}</text>
+      <text class="stat-label">作品总数</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-num">{{stats.likes}}</text>
+      <text class="stat-label">获赞总数</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-num">{{stats.comments}}</text>
+      <text class="stat-label">收到留言</text>
+    </view>
+  </view>
+
+  <!-- 资料行 -->
+  <view class="rows-card card">
+    <view class="row">
+      <text class="row-label">昵称</text>
+      <input
+        class="row-input"
+        type="nickname"
+        value="{{userInfo.nickName}}"
+        placeholder="填写昵称"
+        placeholder-class="input-placeholder"
+        bindblur="onNicknameBlur"
+      />
+    </view>
+    <view class="row">
+      <text class="row-label">班级</text>
+      <text class="row-value">{{userInfo.className || '视觉传达2201班'}}</text>
+    </view>
+  </view>
+
+  <!-- 审核状态追踪 -->
+  <view class="section-head">
+    <text class="section-title">审核状态追踪</text>
+    <text class="section-extra">点击查看详情 / 驳回原因</text>
+  </view>
+  <view class="track-card card">
+    <view wx:if="{{!tracking.length && !loading}}" class="track-empty">
+      还没有提交过作品，去「发布」晒出你的创作吧
+    </view>
+
+    <view
+      class="track-item"
+      wx:for="{{tracking}}"
+      wx:key="id"
+      data-index="{{index}}"
+      bindtap="statusTap"
+    >
+      <view class="track-thumb">
+        <image
+          wx:if="{{item.coverUrl}}"
+          class="track-thumb-img"
+          src="{{item.coverUrl}}"
+          mode="aspectFill"
+        />
+        <view
+          wx:else
+          class="track-thumb-ph"
+          style="background: {{item.coverMeta ? 'linear-gradient(160deg, ' + item.coverMeta.gradient[0] + ', ' + item.coverMeta.gradient[1] + ')' : '#E9E2D5'}};"
+        >
+          <text class="track-thumb-emoji">{{item.coverMeta.emoji}}</text>
+        </view>
+      </view>
+
+      <view class="track-main">
+        <text class="track-title">{{item.title}}</text>
+        <text class="track-note">{{item.timeText}} 提交 · {{item.note || '审核中'}}</text>
+      </view>
+
+      <text class="tag {{item.statusCls}}">{{item.statusText}}</text>
+    </view>
+  </view>
+
+  <!-- 我的作品：时间线瀑布流（带审核状态标签） -->
+  <view class="section-head">
+    <text class="section-title">我的作品</text>
+    <text class="section-extra">按时间线排列</text>
+  </view>
+
+  <view class="waterfall" wx:if="{{!isEmpty}}">
+    <view class="column">
+      <view class="work-card" wx:for="{{leftList}}" wx:key="id">
+        <view class="cover-box" style="padding-bottom: {{item.aspect * 100}}%;">
+          <image
+            wx:if="{{item.coverUrl}}"
+            class="cover-img"
+            src="{{item.coverUrl}}"
+            mode="aspectFill"
+            lazy-load
+          />
+          <view
+            wx:else
+            class="cover-ph"
+            style="background: {{item.coverMeta ? 'linear-gradient(160deg, ' + item.coverMeta.gradient[0] + ', ' + item.coverMeta.gradient[1] + ')' : '#E9E2D5'}};"
+          >
+            <text class="ph-emoji">{{item.coverMeta.emoji}}</text>
+          </view>
+        </view>
+        <view class="work-body">
+          <view class="work-title">{{item.title}}</view>
+          <view class="work-foot">
+            <text class="work-time">{{item.timeText}}</text>
+            <text class="tag {{item.statusCls}}">{{item.statusText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="column">
+      <view class="work-card" wx:for="{{rightList}}" wx:key="id">
+        <view class="cover-box" style="padding-bottom: {{item.aspect * 100}}%;">
+          <image
+            wx:if="{{item.coverUrl}}"
+            class="cover-img"
+            src="{{item.coverUrl}}"
+            mode="aspectFill"
+            lazy-load
+          />
+          <view
+            wx:else
+            class="cover-ph"
+            style="background: {{item.coverMeta ? 'linear-gradient(160deg, ' + item.coverMeta.gradient[0] + ', ' + item.coverMeta.gradient[1] + ')' : '#E9E2D5'}};"
+          >
+            <text class="ph-emoji">{{item.coverMeta.emoji}}</text>
+          </view>
+        </view>
+        <view class="work-body">
+          <view class="work-title">{{item.title}}</view>
+          <view class="work-foot">
+            <text class="work-time">{{item.timeText}}</text>
+            <text class="tag {{item.statusCls}}">{{item.statusText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 大字模式 / 设置与帮助 -->
+  <view class="rows-card card setting-card">
+    <view class="row">
+      <text class="row-label">大字模式（适老化 · 22px）</text>
+      <switch checked="{{fontMode === 'large'}}" color="#C84B31" bindchange="onFontSwitch" />
+    </view>
+    <view class="row" bindtap="openHelp">
+      <text class="row-label">设置与帮助</text>
+      <text class="chev">›</text>
+    </view>
+  </view>
+
+  <view class="copyright">沐光·美育平台 v1.0</view>
+</view>
