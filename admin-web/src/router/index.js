@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getAdminInfo } from '@/utils/constants'
 
 const routes = [
   {
@@ -42,6 +43,12 @@ const routes = [
         component: () => import('@/views/Sensitive.vue'),
         meta: { title: '敏感词库', icon: 'Warning' },
       },
+      {
+        path: 'studio',
+        name: 'Studio',
+        component: () => import('@/views/Studio.vue'),
+        meta: { title: '我的创作台', icon: 'EditPen' },
+      },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
@@ -52,16 +59,26 @@ const router = createRouter({
   routes,
 })
 
-// 全局守卫：未登录跳登录页
+// 管理后台专属页面（仅 admin 角色可进）
+const ADMIN_ONLY = ['Dashboard', 'Audit', 'Users', 'Courses', 'Sensitive']
+
+// 全局守卫：未登录跳登录页；登录后按角色分流
 router.beforeEach((to) => {
   const token = localStorage.getItem('admin_token')
+  const role = getAdminInfo()?.role
+  const isAdmin = role === 'admin'
+
   if (!to.meta.public && !token) {
     return { name: 'Login', query: { redirect: to.fullPath } }
   }
   if (to.name === 'Login' && token) {
-    return { name: 'Dashboard' }
+    return { name: isAdmin ? 'Dashboard' : 'Studio' }
   }
-  document.title = to.meta.title || '沐光·美育管理平台'
+  // 学生 / 教师不得进入管理后台页面，统一回创作台
+  if (token && role && !isAdmin && ADMIN_ONLY.includes(to.name)) {
+    return { name: 'Studio' }
+  }
+  document.title = to.meta.title || '沐光·美育平台'
   return true
 })
 

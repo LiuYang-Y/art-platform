@@ -8,7 +8,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-const menus = [
+const ALL_MENUS = [
   { path: '/dashboard', title: '工作台', icon: 'Odometer' },
   { path: '/audit', title: '作品审核', icon: 'Stamp' },
   { path: '/users', title: '用户管理', icon: 'User' },
@@ -16,12 +16,15 @@ const menus = [
   { path: '/sensitive', title: '敏感词库', icon: 'Warning' },
 ]
 
+/** 学生 / 教师角色（非管理员）仅开放创作台 */
+const STUDENT_MENUS = [{ path: '/studio', title: '我的创作台', icon: 'EditPen' }]
+
+const menus = computed(() => (auth.isAdmin ? ALL_MENUS : STUDENT_MENUS))
+
 const activeMenu = computed(() => route.path)
 const adminName = computed(() => auth.displayName)
-const adminRole = computed(() => {
-  const r = auth.adminInfo?.role
-  return r === 'teacher' ? '教师管理员' : r === 'admin' ? '超级管理员' : '管理员'
-})
+const adminRole = computed(() => auth.roleName)
+const portalName = computed(() => (auth.isAdmin ? '管理平台' : '学生创作端'))
 
 async function onLogout() {
   try {
@@ -46,7 +49,7 @@ async function onLogout() {
         <div class="logo-mark">沐</div>
         <div class="logo-text">
           <b>沐光·美育</b>
-          <span>管理平台</span>
+          <span>{{ portalName }}</span>
         </div>
       </div>
 

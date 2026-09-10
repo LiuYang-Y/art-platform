@@ -10,7 +10,7 @@ const auth = useAuthStore()
 
 const formRef = ref()
 const loading = ref(false)
-const form = reactive({ username: 'admin', password: '' })
+const form = reactive({ username: '', password: '' })
 
 const rules = {
   username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
@@ -22,9 +22,10 @@ async function onSubmit() {
   loading.value = true
   try {
     await auth.login(form.username.trim(), form.password)
-    ElMessage.success('登录成功')
+    ElMessage.success(`${auth.roleName}登录成功`)
+    // 按角色分流：管理员 → 后台工作台；学生/教师 → 创作台
     const redirect = route.query.redirect
-    router.push(typeof redirect === 'string' ? redirect : '/dashboard')
+    router.push(typeof redirect === 'string' ? redirect : auth.homePath)
   } catch {
     // 拦截器已提示
   } finally {
@@ -43,13 +44,13 @@ async function onSubmit() {
         <div class="logo-mark">沐</div>
         <div>
           <h1>沐光 · 美育平台</h1>
-          <p>高校美育成果展示与交流 · 管理端</p>
+          <p>高校美育成果展示与交流 · 管理员 / 学生登录</p>
         </div>
       </div>
 
       <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="onSubmit">
         <el-form-item prop="username">
-          <el-input v-model="form.username" placeholder="管理员账号" :prefix-icon="'User'" clearable />
+          <el-input v-model="form.username" placeholder="账号（管理员 / 学生）" :prefix-icon="'User'" clearable />
         </el-form-item>
         <el-form-item prop="password">
           <el-input v-model="form.password" type="password" placeholder="登录密码" show-password :prefix-icon="'Lock'" />
@@ -60,7 +61,7 @@ async function onSubmit() {
       </el-form>
 
       <div class="tip">
-        默认测试账号：<b>admin</b> / <b>admin123</b>
+        管理员：<b>admin</b> / <b>admin123</b>　·　学生发布：<b>student</b> / <b>123456</b>
       </div>
     </el-card>
   </div>

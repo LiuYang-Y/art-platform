@@ -2,6 +2,8 @@ import request from '@/utils/request'
 
 // ---------------- 认证 ----------------
 export const adminLogin = (data) => request.post('/admin/login', data)
+/** 账密登录（网页端通用：学生 / 教师 / 管理员，登录后按 role 分流） */
+export const userLogin = (data) => request.post('/user/login-password', data)
 
 // ---------------- 工作台统计 G-04 ----------------
 export const getStats = () => request.get('/admin/stats')
@@ -28,3 +30,11 @@ export const addSensitiveWord = (data) => request.post('/admin/sensitive/add', d
 export const updateSensitiveWord = (data) => request.post('/admin/sensitive/update', data)
 export const deleteSensitiveWords = (ids) => request.post('/admin/sensitive/delete', { ids })
 export const resetSensitiveWords = () => request.post('/admin/sensitive/reset')
+
+// ---------------- 学生创作台（网页端发布作品 Z-03 / Z-04） ----------------
+export const getWorkCategories = () => request.get('/work/categories')
+export const getMyWorks = () => request.get('/work/mine')
+export const createWork = (data) => request.post('/work/create', data)
+export const aiPolish = (data) => request.post('/ai/polish', data)
+export const uploadWorkImage = (formData) =>
+  request.post('/work/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })

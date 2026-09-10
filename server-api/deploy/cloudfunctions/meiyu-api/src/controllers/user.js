@@ -1,11 +1,13 @@
 /**
  * 用户模块控制器（PostgreSQL 版）
  * ------------------------------------------------------------
- * POST /api/user/login  微信静默登录
+ * POST /api/user/login          微信静默登录（小程序）
+ * POST /api/user/login-password 账密登录（网页端，学生/教师/管理员通用）
  * GET  /api/user/profile 当前用户信息（需鉴权）
  */
 
 const axios = require('axios');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { query, queryOne, insertReturningId } = require('../utils/config/db');
 const { success, fail } = require('../utils/response');
@@ -146,6 +148,60 @@ async function login(req, res) {
   }
 }
 
+/**
+ * POST /api/user/login-password
+ * 网页端账密登录：学生 / 教师 / 管理员通用。
+ * 与小程序微信登录共用同一 users 表与 JWT 签发逻辑，
+ * 前端按返回的 role 分流（admin → 管理后台，student/teacher → 创作台）。
+ */
+async function loginByPassword(req, res) {
+  const { username, password } = req.body || {};
+  if (!username || !password) return fail(res, '请输入账号和密码', 400);
+
+  try {
+    const user = await queryOne('SELECT * FROM users WHERE username = $1', [username.trim()]);
+    if (!user) return fail(res, '账号或密码错误', 400);
+
+    // G-02：被管理员停用的用户禁止登录
+    if ((user.status || 'active') !== 'active') {
+      return fail(res, '该账号已被停用，如有疑问请联系管理员', 403, 403);
+    }
+
+    const ok = user.password_hash && (await bcrypt.compare(password, user.password_hash));
+    if (!ok) return fail(res, '账号或密码错误', 400);
+
+    await query('UPDATE users SET last_login_at = $1, updated_at = $1 WHERE id = $2', [
+      new Date(),
+      user.id
+    ]);
+    user.last_login_at = new Date();
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role || DEFAULT_ROLE,
+        openid: user.openid,
+        username: user.username
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    return success(
+      res,
+      {
+        token,
+        userInfo: { ...toUserInfo(user), username: user.username },
+        loginMode: 'password'
+      },
+      '登录成功'
+    );
+  } catch (err) {
+    console.error('[user] 账密登录异常:', err.message);
+    return fail(res, '登录失败，请稍后重试', 500);
+  }
+}
+
 /** GET /api/user/profile */
 async function getProfile(req, res) {
   try {
@@ -191,4 +247,4 @@ async function updateProfile(req, res) {
   }
 }
 
-module.exports = { login, getProfile, updateProfile };
+module.exports = { login, loginByPassword, getProfile, updateProfile };

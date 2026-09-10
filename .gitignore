@@ -51,3 +51,6 @@ admin-web/e2e_*.png
 
 # 文档生成流水线中间产物（HTML/脚本/token 等，不入库；最终成品在 docs/）
 output/
+
+# Office 锁文件（Word/WPS 打开时生成的 ~$ 临时文件）
+~$*

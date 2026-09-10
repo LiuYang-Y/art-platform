@@ -111,13 +111,17 @@ async function clearBiz() {
     for (const u of userDefs) {
       const cols = ['openid', 'nick_name', 'avatar_url', 'role', 'class_id', 'status', 'last_login_at', 'created_at', 'updated_at'];
       const vals = [u.openid, u.name, AVATAR(u.key), u.role, classIds[u.cls], 'active', now, now, now];
-      if (u.username) {
-        cols.push('username', 'password_hash');
-        vals.push(u.username, bcrypt.hashSync(u.password, 10));
-      }
+      // 账密登录凭据：管理员用自定义账号；学员/志愿者给通用演示账号
+      // （学生端网页登录演示：student/123456，教师端：teacher/123456，其余学员用其 key）
+      const account = u.username
+        ? { username: u.username, password: u.password }
+        : { username: u.key === 'lin' ? 'student' : u.key === 'chen' ? 'teacher' : u.key, password: '123456' };
+      cols.push('username', 'password_hash');
+      vals.push(account.username, bcrypt.hashSync(account.password, 10));
       userIds[u.key] = await db.insertReturningId('users', cols, vals);
     }
-    console.log(`  ✅ 用户 ${userDefs.length} 个（学员 13 / 志愿者 2 / 管理员 1；admin/admin123 可登录）`);
+    console.log(`  ✅ 用户 ${userDefs.length} 个（学员 13 / 志愿者 2 / 管理员 1）`);
+    console.log('     可登录账号：admin/admin123（管理员）· student/123456（学员 林小满）· teacher/123456（志愿者 陈志远）');
 
     // ---------- 3. 作品（任务书：≥15，覆盖 5 分类；作者分散） ----------
     const t = (offsetMin) => new Date(now.getTime() - offsetMin * MINUTE).toISOString();
@@ -267,7 +271,7 @@ async function clearBiz() {
 
     console.log('─'.repeat(60));
     console.log('  ✅ 种子数据注入完成！');
-    console.log('  可登录账号：admin/admin123（Web 管理端）· 林小满(openid seed_student_openid)');
+    console.log('  可登录账号：admin/admin123（Web 管理后台）· student/123456（Web 学生创作端发布）· 小程序演示登录同为学生林小满');
     console.log('='.repeat(60));
     process.exit(0);
   } catch (err) {
