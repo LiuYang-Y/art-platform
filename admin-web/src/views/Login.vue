@@ -44,13 +44,13 @@ async function onSubmit() {
         <div class="logo-mark">沐</div>
         <div>
           <h1>沐光 · 美育平台</h1>
-          <p>高校美育成果展示与交流 · 管理员 / 学生登录</p>
+          <p>高校美育成果展示与交流 · 管理员 / 教师登录</p>
         </div>
       </div>
 
       <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="onSubmit">
         <el-form-item prop="username">
-          <el-input v-model="form.username" placeholder="账号（管理员 / 学生）" :prefix-icon="'User'" clearable />
+          <el-input v-model="form.username" placeholder="账号（管理员 / 教师）" :prefix-icon="'User'" clearable />
         </el-form-item>
         <el-form-item prop="password">
           <el-input v-model="form.password" type="password" placeholder="登录密码" show-password :prefix-icon="'Lock'" />
@@ -61,7 +61,8 @@ async function onSubmit() {
       </el-form>
 
       <div class="tip">
-        管理员：<b>admin</b> / <b>admin123</b>　·　学生发布：<b>student</b> / <b>123456</b>
+        管理员：<b>admin</b> / <b>admin123</b><br />
+        学生请使用微信小程序登录并发布作品
       </div>
     </el-card>
   </div>
@@ -75,34 +76,45 @@ async function onSubmit() {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: linear-gradient(135deg, #1f2b3a 0%, #2f4a73 55%, #3d5a80 100%);
+  /* 极光柔彩底（iOS 液态玻璃） */
+  background:
+    radial-gradient(ellipse 55% 45% at 15% 8%, rgba(255, 196, 150, 0.55), transparent 62%),
+    radial-gradient(ellipse 50% 42% at 88% 18%, rgba(160, 180, 250, 0.52), transparent 60%),
+    radial-gradient(ellipse 55% 48% at 85% 85%, rgba(255, 205, 175, 0.48), transparent 62%),
+    radial-gradient(ellipse 48% 40% at 8% 90%, rgba(165, 215, 195, 0.45), transparent 60%),
+    linear-gradient(160deg, #FAF6F0 0%, #F0F1F8 55%, #ECF3F0 100%);
 }
 .deco-circle {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.12), transparent 70%);
+  filter: blur(60px);
 }
 .c1 {
-  width: 420px;
-  height: 420px;
-  top: -120px;
-  right: -80px;
+  width: 460px;
+  height: 460px;
+  top: -140px;
+  right: -100px;
+  background: radial-gradient(circle at 40% 40%, rgba(232, 133, 61, 0.35), transparent 70%);
 }
 .c2 {
-  width: 360px;
-  height: 360px;
-  bottom: -140px;
-  left: -90px;
-  background: radial-gradient(circle at 60% 40%, rgba(232, 133, 61, 0.18), transparent 70%);
+  width: 400px;
+  height: 400px;
+  bottom: -150px;
+  left: -100px;
+  background: radial-gradient(circle at 60% 40%, rgba(61, 90, 128, 0.30), transparent 70%);
 }
 
 .login-card {
   width: 420px;
   max-width: 92vw;
-  border-radius: 16px;
-  border: none;
+  border-radius: 20px;
   z-index: 1;
   padding: 8px 6px;
+  background: rgba(255, 255, 255, 0.62) !important;
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  box-shadow: 0 24px 60px rgba(60, 80, 110, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 .login-card :deep(.el-card__body) {
   padding: 34px 38px 28px;
@@ -138,12 +150,13 @@ async function onSubmit() {
 }
 .submit {
   width: 100%;
-  height: 44px;
+  height: 46px;
   font-size: 16px;
   letter-spacing: 4px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, #3d5a80, #2f4a73);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #e8853d, #c84b31);
   border: none;
+  box-shadow: 0 8px 22px rgba(200, 75, 49, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 .submit:hover {
   opacity: 0.92;

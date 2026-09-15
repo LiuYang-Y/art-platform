@@ -45,6 +45,11 @@ server-api/deploy/.fn_env.json
 server-api/uploads/
 # E2E 临时截图
 admin-web/e2e_*.png
+# 一次性截图与验证脚本（排查用，不入库）
+admin-web/shot-*.png
+admin-web/verify-*.cjs
+server-api/_diag_*.js
+server-api/_probe_*.js
 
 # WorkBuddy 本地工作记忆/数据目录（含工作日志，不入库）
 .workbuddy/

@@ -32,6 +32,12 @@ const routes = [
         meta: { title: '用户管理', icon: 'User' },
       },
       {
+        path: 'bind-audit',
+        name: 'BindAudit',
+        component: () => import('@/views/BindAudit.vue'),
+        meta: { title: '账号认定', icon: 'Postcard' },
+      },
+      {
         path: 'courses',
         name: 'Courses',
         component: () => import('@/views/Courses.vue'),
@@ -60,7 +66,7 @@ const router = createRouter({
 })
 
 // 管理后台专属页面（仅 admin 角色可进）
-const ADMIN_ONLY = ['Dashboard', 'Audit', 'Users', 'Courses', 'Sensitive']
+const ADMIN_ONLY = ['Dashboard', 'Audit', 'Users', 'BindAudit', 'Courses', 'Sensitive']
 
 // 全局守卫：未登录跳登录页；登录后按角色分流
 router.beforeEach((to) => {

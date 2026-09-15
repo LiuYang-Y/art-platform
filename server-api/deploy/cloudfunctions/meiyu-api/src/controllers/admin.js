@@ -11,8 +11,9 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { query, queryOne } = require('../utils/config/db');
+const { query, queryOne, insertReturningId } = require('../utils/config/db');
 const { success, fail } = require('../utils/response');
+const { findOrCreateClassId } = require('../utils/classResolve');
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
@@ -113,9 +114,12 @@ function toUserRow(r) {
     avatarUrl: r.avatar_url,
     role: r.role,
     username: r.username || '',
+    realName: r.real_name || '',
     className: r.class_name || '',
     classId: r.class_id,
     status: r.status || 'active',
+    bindStatus: r.bind_status || 'unbound',
+    studentId: r.student_id ? String(r.student_id) : '',
     workCount: r.work_count,
     likeCount: r.like_count,
     createTime: r.created_at,
@@ -225,6 +229,7 @@ async function listUsers(req, res) {
     const rows = (
       await query(
         `SELECT u.id, u.openid, u.nick_name, u.avatar_url, u.role, u.username, u.status,
+                u.real_name, u.bind_status, u.student_id,
                 u.class_id, c.class_name, u.created_at, u.last_login_at,
                 (SELECT COUNT(*) FROM works w WHERE w.author_id = u.id) AS work_count,
                 (SELECT COALESCE(SUM(like_count),0) FROM works w WHERE w.author_id = u.id) AS like_count
@@ -239,6 +244,247 @@ async function listUsers(req, res) {
   } catch (err) {
     console.error('[admin] 用户列表查询异常:', err.message);
     return fail(res, '查询失败', 500);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 账号认定（G-07）：学号绑定申请的审核                                  */
+/* ------------------------------------------------------------------ */
+
+/** 认定申请对外字段 */
+function toBindRow(r) {
+  return {
+    id: r.id,
+    nickName: r.nick_name,
+    avatarUrl: r.avatar_url,
+    role: r.role,
+    studentId: r.student_id ? String(r.student_id) : '',
+    realName: r.real_name || '',
+    className: r.class_name || '',
+    bindStatus: r.bind_status || 'unbound',
+    applyTime: r.bind_apply_at,
+    auditTime: r.bind_audit_at,
+    rejectReason: r.bind_reject_reason || '',
+    workCount: r.work_count,
+    createTime: r.created_at
+  };
+}
+
+/**
+ * GET /api/admin/bind-applications?status=pending|approved|rejected|all
+ * 账号认定申请列表（仅展示提交过绑定或已被认定的账号）
+ * 班级名来自 students 自助提交时写入的 class_id（LEFT JOIN classes）
+ */
+async function listBindApplications(req, res) {
+  const { status } = req.query;
+
+  try {
+    const params = [status && status !== 'all' ? status : ''];
+    const rows = (
+      await query(
+        `SELECT u.id, u.nick_name, u.avatar_url, u.role,
+                u.student_id, u.real_name, u.bind_status,
+                u.bind_apply_at, u.bind_audit_at, u.bind_reject_reason, u.created_at,
+                c.class_name,
+                (SELECT COUNT(*) FROM works w WHERE w.author_id = u.id) AS work_count
+         FROM users u
+         LEFT JOIN classes c ON c.id = u.class_id
+         WHERE u.bind_status IS NOT NULL AND u.bind_status <> 'unbound'
+           AND ($1 = '' OR u.bind_status = $1)
+         ORDER BY CASE u.bind_status WHEN 'pending' THEN 0 ELSE 1 END, u.bind_apply_at DESC NULLS LAST`,
+        params
+      )
+    ).rows;
+
+    const list = rows.map(toBindRow);
+    return success(res, { list, total: list.length }, '查询成功');
+  } catch (err) {
+    console.error('[admin] 认定申请列表查询异常:', err.message);
+    return fail(res, '查询失败', 500);
+  }
+}
+
+/**
+ * POST /api/admin/bind-audit  账号认定审核
+ * Body: { userId, action: 'approve'|'reject', reason? }
+ *  - approve：bind_status → approved，记录认定时间
+ *  - reject ：bind_status → rejected，记录原因；同时释放学号（student_id 置空），
+ *             便于学生修正后重新提交、也避免错误学号长期占用
+ */
+async function auditBindApplication(req, res) {
+  const { userId, action, reason } = req.body || {};
+  if (!userId) return fail(res, '缺少用户 ID', 400);
+  if (!['approve', 'reject'].includes(action)) {
+    return fail(res, "action 仅支持 'approve' 或 'reject'", 400);
+  }
+
+  try {
+    const user = await queryOne('SELECT id, bind_status, student_id FROM users WHERE id = $1', [
+      Number(userId)
+    ]);
+    if (!user) return fail(res, '用户不存在', 404);
+    if ((user.bind_status || 'unbound') !== 'pending') {
+      return fail(res, '该账号当前没有待认定的绑定申请', 400);
+    }
+
+    if (action === 'approve') {
+      // 并发兜底：认定前再确认学号未被其他账号占用
+      //
+      // ⚠️ 必须 String() 包一层：student_id 是 varchar，但 OpenAPI 通道（db.js coerce()）
+      // 会把「纯数字字符串」还原成 JS Number。若直接当参数回传，escapeValue 会拼出
+      // 无引号的数字字面量 → `character varying = bigint`（SQLSTATE 42883）→ 接口 500。
+      // 所有「从库里读出的文本列、再作为参数回传」的写法都要显式转字符串。
+      const sidText = user.student_id == null ? '' : String(user.student_id);
+      const occupied = await queryOne(
+        "SELECT id FROM users WHERE student_id = $1 AND bind_status = 'approved' AND id <> $2",
+        [sidText, Number(userId)]
+      );
+      if (occupied) {
+        return fail(res, '该学号已被其他账号认定，请先驳回本申请', 400);
+      }
+      await query(
+        `UPDATE users
+         SET bind_status = 'approved', bind_audit_at = $2, bind_reject_reason = NULL, updated_at = $2
+         WHERE id = $1`,
+        [Number(userId), new Date()]
+      );
+      return success(res, { userId: Number(userId), bindStatus: 'approved' }, '认定通过');
+    }
+
+    const rejectReason = reason && reason.trim() ? reason.trim() : '学号信息核对未通过';
+    await query(
+      `UPDATE users
+       SET bind_status = 'rejected', bind_audit_at = $2, bind_reject_reason = $3,
+           student_id = NULL, updated_at = $2
+       WHERE id = $1`,
+      [Number(userId), new Date(), rejectReason]
+    );
+    return success(res, { userId: Number(userId), bindStatus: 'rejected' }, '已驳回');
+  } catch (err) {
+    // 日志通道（ClsTopicId）未开通，出错信息只写 console 等于丢失；
+    // 本接口仅 admin 可调，故把 DB 原始错误一并回传，便于自助定位。
+    console.error('[admin] 账号认定审核异常:', err.message);
+    return fail(res, `操作失败：${String(err.message || '未知错误').slice(0, 200)}`, 500);
+  }
+}
+
+/**
+ * GET /api/admin/classes  班级列表（供用户管理下拉选择）
+ * 返回 id / 学院 / 专业 / 班级 / 年级，以及拼好的 label 方便前端直接展示
+ */
+async function listClasses(req, res) {
+  try {
+    const rows = (
+      await query(
+        `SELECT id, college_name, major_name, class_name, grade_year, is_default
+         FROM classes
+         ORDER BY grade_year DESC NULLS LAST, college_name, class_name`
+      )
+    ).rows;
+
+    const list = rows.map((r) => ({
+      id: r.id,
+      collegeName: r.college_name || '',
+      majorName: r.major_name || '',
+      className: r.class_name || '',
+      gradeYear: r.grade_year || '',
+      isDefault: !!r.is_default,
+      label: [r.class_name, r.major_name, r.grade_year].filter(Boolean).join(' · ')
+    }));
+
+    return success(res, { list, total: list.length }, '查询成功');
+  } catch (err) {
+    console.error('[admin] 班级列表查询异常:', err.message);
+    return fail(res, '查询失败', 500);
+  }
+}
+
+/**
+ * POST /api/admin/user/update  修改用户资料（G-02 扩展）
+ * Body: { userId, realName?, className?, classId? }
+ *  - realName：「姓名」即平台展示名（昵称概念已取消），非空、最长 30 字；
+ *              写入时同步 nick_name，作品/评论/小程序的作者名随之统一
+ *  - className：班级名，自由输入。命中已有班级则复用，未命中则自动新建；
+ *               空串/nulls 表示清空班级；不传 = 不修改
+ *  - classId  ：兼容旧调用的按 ID 指定班级
+ */
+async function updateUser(req, res) {
+  const { userId, realName, className, classId } = req.body || {};
+  if (!userId) return fail(res, '缺少用户 ID', 400);
+
+  try {
+    const target = await queryOne('SELECT id FROM users WHERE id = $1', [Number(userId)]);
+    if (!target) return fail(res, '用户不存在', 404);
+
+    const sets = [];
+    const values = [];
+    let idx = 1;
+
+    if (realName !== undefined) {
+      const v = String(realName).trim();
+      if (!v) return fail(res, '姓名不能为空', 400);
+      if (v.length > 30) return fail(res, '姓名最长 30 个字符', 400);
+      // 姓名即展示名：双写 nick_name，保证所有既有展示链路（作品、评论、小程序）立即同步
+      sets.push(`real_name = $${idx++}`);
+      values.push(v);
+      sets.push(`nick_name = $${idx++}`);
+      values.push(v);
+    }
+
+    if (className !== undefined) {
+      const v = String(className || '').trim();
+      if (!v) {
+        sets.push(`class_id = $${idx++}`);
+        values.push(null);
+      } else {
+        // 命中已有班级则复用，否则自动建档
+        // （与小程序「账号认定」自助提交共用同一套解析逻辑，避免两处口径分叉）
+        let resolved;
+        try {
+          resolved = await findOrCreateClassId(v);
+        } catch (err) {
+          return fail(res, err.message || '班级信息不合法', 400);
+        }
+        sets.push(`class_id = $${idx++}`);
+        values.push(resolved.id);
+      }
+    } else if (classId !== undefined) {
+      if (classId === null || classId === '') {
+        sets.push(`class_id = $${idx++}`);
+        values.push(null);
+      } else {
+        const cid = Number(classId);
+        if (!Number.isInteger(cid) || cid <= 0) return fail(res, '班级 ID 不合法', 400);
+        const cls = await queryOne('SELECT id FROM classes WHERE id = $1', [cid]);
+        if (!cls) return fail(res, '所选班级不存在', 400);
+        sets.push(`class_id = $${idx++}`);
+        values.push(cid);
+      }
+    }
+
+    if (sets.length === 0) return fail(res, '没有可更新的字段', 400);
+
+    sets.push(`updated_at = $${idx++}`);
+    values.push(new Date());
+    values.push(Number(userId));
+
+    await query(`UPDATE users SET ${sets.join(', ')} WHERE id = $${idx}`, values);
+
+    // 回传更新后的完整行，前端可直接刷新该行
+    const row = await queryOne(
+      `SELECT u.id, u.openid, u.nick_name, u.avatar_url, u.role, u.username, u.status,
+              u.real_name, u.bind_status, u.student_id,
+              u.class_id, c.class_name, u.created_at, u.last_login_at
+       FROM users u
+       LEFT JOIN classes c ON c.id = u.class_id
+       WHERE u.id = $1`,
+      [Number(userId)]
+    );
+
+    return success(res, toUserRow(row), '保存成功');
+  } catch (err) {
+    console.error('[admin] 用户资料更新异常:', err.message);
+    return fail(res, '保存失败', 500);
   }
 }
 
@@ -276,5 +522,9 @@ module.exports = {
   adminLogin,
   getStats,
   listUsers,
-  setUserStatus
+  listClasses,
+  updateUser,
+  setUserStatus,
+  listBindApplications,
+  auditBindApplication
 };

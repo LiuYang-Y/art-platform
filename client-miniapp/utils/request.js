@@ -151,6 +151,9 @@ const post = (url, data = {}, options = {}) =>
 const put = (url, data = {}, options = {}) =>
   request({ url, method: 'PUT', data, ...options });
 
+const patch = (url, data = {}, options = {}) =>
+  request({ url, method: 'PATCH', data, ...options });
+
 const remove = (url, data = {}, options = {}) =>
   request({ url, method: 'DELETE', data, ...options });
 
@@ -160,5 +163,6 @@ module.exports = {
   get,
   post,
   put,
+  patch,
   remove
 };

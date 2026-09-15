@@ -24,4 +24,8 @@ router.get('/profile', auth, userController.getProfile);
 // 更新昵称与头像
 router.patch('/profile', auth, userController.updateProfile);
 
+// 学号绑定认定（G-07）：查询状态 / 提交绑定申请
+router.get('/bind-status', auth, userController.getBindStatus);
+router.post('/bind-student', auth, userController.bindStudent);
+
 module.exports = router;

@@ -11,6 +11,7 @@
 
 const jwt = require('jsonwebtoken');
 const { fail } = require('../utils/response');
+const { queryOne } = require('../utils/config/db');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -95,8 +96,43 @@ const authOptional = (req, res, next) => {
   return next();
 };
 
+/**
+ * 学号绑定认定门槛（G-07）
+ * ------------------------------------------------------------
+ * 学生账号须完成「学号绑定 + 管理员认定」（users.bind_status = 'approved'）
+ * 才能执行写操作（发布作品 / 评论）；教师、管理员豁免。
+ * 用法：router.post('/create', auth, requireBound('发布作品'), handler)
+ *
+ * @param {string} action 动作名，用于拼接提示语（如「发布作品」「评论」）
+ */
+const requireBound = (action) => async (req, res, next) => {
+  try {
+    // 教师 / 管理员无需学号认定
+    if (req.user && req.user.role && req.user.role !== 'student') {
+      return next();
+    }
+    const user = await queryOne('SELECT bind_status FROM users WHERE id = $1', [req.user.userId]);
+    if (!user) return fail(res, '用户不存在，请重新登录', 401, 401);
+
+    if ((user.bind_status || 'unbound') !== 'approved') {
+      const hint =
+        user.bind_status === 'pending'
+          ? `学号绑定正在认定中，通过后即可${action}`
+          : user.bind_status === 'rejected'
+            ? `学号绑定未通过认定，请在「我的」页重新提交后再${action}`
+            : `请先完成学号绑定认定（「我的」页提交），认定通过后才能${action}`;
+      return fail(res, hint, 403, 403);
+    }
+    return next();
+  } catch (err) {
+    console.error('[auth] 绑定认定校验异常:', err.message);
+    return fail(res, '绑定认定校验失败，请稍后重试', 500);
+  }
+};
+
 module.exports = {
   auth,
   authRole,
-  authOptional
+  authOptional,
+  requireBound
 };

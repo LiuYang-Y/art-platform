@@ -34,7 +34,8 @@ Page({
     commentTotal: 0,
 
     inputValue: '',
-    replyTo: null, // { id, name }
+    inputFocus: false,
+    replyTo: null, // { id, name } —— id 为被回复的那条评论/回复
     quickPhrases: QUICK_PHRASES
   },
 
@@ -43,6 +44,7 @@ Page({
   _likeTimer: null,
   _plusTimer: null,
   _sending: false,
+  _deleting: false,
 
   onLoad(options) {
     this._id = options.id || '';
@@ -133,8 +135,14 @@ Page({
       const list = (res && res.list) || [];
       let total = 0;
       const comments = list.map((c) => {
+        const rootName = c.userName;
         const replies = (c.replies || []).map((r) =>
-          Object.assign({}, r, { timeText: util.fmtDateTime(r.createTime) })
+          Object.assign({}, r, {
+            timeText: util.fmtDateTime(r.createTime),
+            // 与根评论作者同名（即直接回复楼主）时不重复显示「回复 @xxx」
+            replyToName:
+              r.replyToUserName && r.replyToUserName !== rootName ? r.replyToUserName : ''
+          })
         );
         total += 1 + replies.length;
         return Object.assign({}, c, { replies, timeText: util.fmtDateTime(c.createTime) });
@@ -144,7 +152,6 @@ Page({
       console.warn('[detail] 评论加载失败:', err && err.message);
     }
   },
-
   /* ================= 画廊 ================= */
 
   onSwiperChange(e) {
@@ -248,13 +255,17 @@ Page({
     this.setData({ inputValue: e.currentTarget.dataset.text });
   },
 
+  /**
+   * 点「回复」：一级评论与二级回复都可点
+   * data-id 传被回复的那条评论 id，后端自动归并到所属的一级评论下
+   */
   setReplyTo(e) {
     const { id, name } = e.currentTarget.dataset;
-    this.setData({ replyTo: { id, name }, inputValue: '' });
+    this.setData({ replyTo: { id, name }, inputValue: '', inputFocus: true });
   },
 
   cancelReply() {
-    this.setData({ replyTo: null });
+    this.setData({ replyTo: null, inputFocus: false });
   },
 
   async sendComment() {
@@ -272,14 +283,74 @@ Page({
         content,
         parentId: this.data.replyTo ? this.data.replyTo.id : null
       });
-      this.setData({ inputValue: '', replyTo: null });
+      this.setData({ inputValue: '', replyTo: null, inputFocus: false });
       await this.loadComments();
       wx.showToast({ title: '留言成功', icon: 'none' });
     } catch (err) {
       console.warn('[detail] 留言失败:', err && err.message);
-      wx.showToast({ title: '留言失败，请重试', icon: 'none' });
+      // G-07：未通过学号认定（403）时引导去「我的」页绑定
+      if (err && err.code === 403) {
+        wx.showModal({
+          title: '需要先完成账号认定',
+          content: err.message || '完成学号绑定认定后才能评论。',
+          confirmText: '去认定',
+          cancelText: '取消',
+          success: (r) => {
+            if (r.confirm) wx.switchTab({ url: '/pages/mine/mine' });
+          }
+        });
+      } else {
+        wx.showToast({ title: (err && err.message) || '留言失败，请重试', icon: 'none' });
+      }
     } finally {
       this._sending = false;
+    }
+  },
+
+  /* ================= 删除留言 ================= */
+
+  /**
+   * 删除留言 / 回复
+   * 权限由服务端判定（评论作者本人 或 作品作者），本端只在 canDelete 为真时渲染按钮
+   * 删除一级留言会连同其下所有回复一起删除，故有回复时提示更明确
+   */
+  onDeleteComment(e) {
+    const { id } = e.currentTarget.dataset;
+    const replyCount = Number(e.currentTarget.dataset.replies || 0);
+    if (!id || this._deleting) return;
+
+    wx.showModal({
+      title: '删除留言',
+      content: replyCount
+        ? `该留言下有 ${replyCount} 条回复，将一并删除且不可恢复。`
+        : '删除后不可恢复，确认删除这条留言？',
+      confirmText: '删除',
+      confirmColor: '#C84B31',
+      success: (r) => {
+        if (r.confirm) this.doDeleteComment(id);
+      }
+    });
+  },
+
+  async doDeleteComment(id) {
+    this._deleting = true;
+    wx.showLoading({ title: '删除中…', mask: true });
+    try {
+      await api.deleteComment(id);
+      wx.hideLoading();
+      await this.loadComments();
+      wx.showToast({ title: '已删除', icon: 'none' });
+    } catch (err) {
+      wx.hideLoading();
+      console.warn('[detail] 删除留言失败:', err && err.message);
+      // 未认定等 403 场景给出服务端原文，其余给通用提示
+      wx.showToast({
+        title: (err && err.message) || '删除失败，请重试',
+        icon: 'none',
+        duration: 2200
+      });
+    } finally {
+      this._deleting = false;
     }
   }
 });

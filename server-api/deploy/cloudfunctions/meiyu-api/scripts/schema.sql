@@ -47,6 +47,16 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(64) UNIQUE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(128);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active'; -- active / disabled
 
+-- 学号绑定认定（G-07）：绑定前只能预览，管理员认定通过后才能发布 / 评论
+-- bind_status: unbound（未绑定）/ pending（待认定）/ approved（已认定）/ rejected（已驳回）
+ALTER TABLE users ADD COLUMN IF NOT EXISTS student_id VARCHAR(32);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS real_name VARCHAR(64);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bind_status VARCHAR(16) NOT NULL DEFAULT 'unbound';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bind_apply_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bind_audit_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bind_reject_reason TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS uk_users_student_id ON users (student_id) WHERE student_id IS NOT NULL;
+
 -- 3. 美育作品表
 CREATE TABLE IF NOT EXISTS works (
     id SERIAL PRIMARY KEY,
@@ -91,6 +101,10 @@ CREATE TABLE IF NOT EXISTS work_comments (
 -- 评论按作品 + 时间查询
 CREATE INDEX IF NOT EXISTS idx_work_comments_work_created
     ON work_comments (work_id, created_at DESC);
+
+-- 二级回复（G-08）：parent_id 统一指向一级评论（根），回复的回复也归到同一根下；
+-- reply_to_user_id 记录「回复 @谁」，用于列表展示「回复 @昵称」
+ALTER TABLE work_comments ADD COLUMN IF NOT EXISTS reply_to_user_id INT REFERENCES users(id) ON DELETE SET NULL;
 
 -- 6. 美育课程表
 CREATE TABLE IF NOT EXISTS courses (

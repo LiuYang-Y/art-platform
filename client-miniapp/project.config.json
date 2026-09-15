@@ -4,7 +4,7 @@
   "miniprogramRoot": "./",
   "projectname": "client-miniapp",
   "appid": "wxd724024dd3f03c44",
-  "libVersion": "2.20.0",
+  "libVersion": "3.17.2",
   "packOptions": {
     "ignore": [],
     "include": []
@@ -30,7 +30,7 @@
     "packNpmManually": false,
     "packNpmRelationList": [],
     "minifyWXSS": true,
-    "ignoreUploadUnusedFiles": true,
+    "ignoreUploadUnusedFiles": false,
     "compileWorklet": false,
     "uglifyFileName": false,
     "minifyWXML": true,

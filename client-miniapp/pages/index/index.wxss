@@ -4,14 +4,17 @@
   padding-bottom: var(--space-lg);
 }
 
-/* ---------- 搜索框 ---------- */
+/* ---------- 搜索框（玻璃胶囊） ---------- */
 .search-bar {
   display: flex;
   align-items: center;
   margin: var(--space-sm) var(--space-md) 0;
   padding: 0 var(--space-sm);
-  min-height: 76rpx;
-  background-color: var(--color-card);
+  min-height: 80rpx;
+  background-color: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: 999rpx;
   box-shadow: var(--shadow-card);
 }
@@ -40,7 +43,7 @@
   font-size: 28rpx;
 }
 
-/* ---------- 分类横滑栏 ---------- */
+/* ---------- 分类横滑栏（透镜玻璃 chip：清透 + 激活透镜气泡） ---------- */
 .cat-scroll {
   white-space: nowrap;
   margin-top: var(--space-sm);
@@ -60,20 +63,24 @@
   padding: 0 30rpx;
   margin-right: var(--space-sm);
   font-size: var(--font-base);
-  color: var(--color-text-sub);
-  background-color: var(--color-card);
+  color: var(--lens-text);
+  background-color: var(--lens-bg);
+  backdrop-filter: blur(30rpx) saturate(190%);
+  -webkit-backdrop-filter: blur(30rpx) saturate(190%);
   border-radius: 999rpx;
-  border: 2rpx solid var(--color-border);
+  border: var(--lens-border);
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.7);
 }
 
 .cat-active {
-  color: #ffffff;
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-  font-weight: 600;
+  color: var(--lens-text-active);
+  background-color: var(--lens-bg-active);
+  border-color: rgba(255, 255, 255, 0.95);
+  font-weight: 700;
+  box-shadow: 0 6rpx 20rpx rgba(120, 90, 60, 0.18), inset 0 1rpx 0 rgba(255, 255, 255, 1);
 }
 
-/* ---------- 排序切换 ---------- */
+/* ---------- 排序切换（透镜玻璃分段控件） ---------- */
 .sort-row {
   display: flex;
   align-items: center;
@@ -83,10 +90,13 @@
 
 .sort-seg {
   display: flex;
-  background-color: var(--color-card);
+  background-color: var(--lens-bg);
+  backdrop-filter: blur(30rpx) saturate(190%);
+  -webkit-backdrop-filter: blur(30rpx) saturate(190%);
+  border: var(--lens-border);
   border-radius: 999rpx;
   padding: 6rpx;
-  box-shadow: var(--shadow-card);
+  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.7);
 }
 
 .sort-item {
@@ -96,14 +106,15 @@
   align-items: center;
   justify-content: center;
   font-size: var(--font-base);
-  color: var(--color-text-sub);
+  color: var(--lens-text);
   border-radius: 999rpx;
 }
 
 .sort-active {
-  color: #ffffff;
-  background-color: var(--color-primary);
-  font-weight: 600;
+  color: var(--lens-text-active);
+  background-color: var(--lens-bg-active);
+  font-weight: 700;
+  box-shadow: 0 4rpx 14rpx rgba(120, 90, 60, 0.16), inset 0 1rpx 0 rgba(255, 255, 255, 1);
 }
 
 .search-tip {
@@ -134,7 +145,10 @@
 
 .work-card {
   margin-bottom: 20rpx;
-  background-color: var(--color-card);
+  background-color: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-card);
@@ -232,10 +246,17 @@
 
 /* ---------- 空态 ---------- */
 .empty {
-  padding: 140rpx var(--space-md);
+  margin: 100rpx var(--space-md) 0;
+  padding: 80rpx var(--space-md);
   display: flex;
   flex-direction: column;
   align-items: center;
+  background-color: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .empty-emoji {

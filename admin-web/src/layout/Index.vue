@@ -11,6 +11,7 @@ const auth = useAuthStore()
 const ALL_MENUS = [
   { path: '/dashboard', title: '工作台', icon: 'Odometer' },
   { path: '/audit', title: '作品审核', icon: 'Stamp' },
+  { path: '/bind-audit', title: '账号认定', icon: 'Postcard' },
   { path: '/users', title: '用户管理', icon: 'User' },
   { path: '/courses', title: '课程管理', icon: 'Calendar' },
   { path: '/sensitive', title: '敏感词库', icon: 'Warning' },
@@ -110,9 +111,12 @@ async function onLogout() {
   height: 100vh;
 }
 
-/* ---------- 侧边栏 ---------- */
+/* ---------- 侧边栏（深色玻璃） ---------- */
 .aside {
-  background: linear-gradient(180deg, #243b55 0%, #1f2b3a 100%);
+  background: linear-gradient(180deg, rgba(36, 59, 85, 0.88) 0%, rgba(31, 43, 58, 0.92) 100%);
+  backdrop-filter: blur(26px) saturate(160%);
+  -webkit-backdrop-filter: blur(26px) saturate(160%);
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
   display: flex;
   flex-direction: column;
   color: #fff;
@@ -127,15 +131,15 @@ async function onLogout() {
 .logo-mark {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #4f6f9f, #3d5a80);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e8853d, #c84b31);
   color: #fff;
   font-weight: 700;
   font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 16px rgba(200, 75, 49, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 .logo-text {
   display: flex;
@@ -156,18 +160,18 @@ async function onLogout() {
   border-right: none;
 }
 .menu :deep(.el-menu-item) {
-  border-radius: 8px;
+  border-radius: 999px;
   margin: 4px 0;
   height: 46px;
   line-height: 46px;
 }
 .menu :deep(.el-menu-item.is-active) {
-  background: #3d5a80;
-  color: #fff !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #A93A26 !important;
+  box-shadow: 0 6px 16px rgba(20, 30, 60, 0.28), inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 .menu :deep(.el-menu-item:hover) {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
 }
 .aside-foot {
   padding: 16px;
@@ -185,10 +189,13 @@ async function onLogout() {
   background: #2e9e6b;
 }
 
-/* ---------- 顶部栏 ---------- */
+/* ---------- 顶部栏（玻璃条） ---------- */
 .header {
-  background: #fff;
-  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 20px rgba(60, 80, 110, 0.06);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -204,14 +211,16 @@ async function onLogout() {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.45);
 }
 .user-chip:hover {
-  background: var(--brand-light);
+  background: rgba(255, 255, 255, 0.75);
 }
 .avatar {
-  background: #3d5a80;
+  background: linear-gradient(135deg, #4f6f9f, #3d5a80);
   color: #fff;
   font-weight: 600;
 }
@@ -237,7 +246,7 @@ async function onLogout() {
 
 /* ---------- 内容 ---------- */
 .main {
-  background: var(--page-bg);
+  background: transparent;
   padding: 20px 24px;
   overflow: auto;
 }

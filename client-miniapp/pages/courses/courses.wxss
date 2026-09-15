@@ -34,7 +34,9 @@
 }
 
 .week-active {
-  background-color: var(--color-primary-light);
+  background: linear-gradient(135deg, rgba(232, 133, 61, 0.20), rgba(200, 75, 49, 0.16));
+  border: 1rpx solid rgba(200, 75, 49, 0.22);
+  box-shadow: 0 4rpx 14rpx rgba(200, 75, 49, 0.12);
 }
 
 .week-active .week-name {

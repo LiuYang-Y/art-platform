@@ -9,12 +9,12 @@
         src="{{userInfo.avatarUrl}}"
         mode="aspectFill"
       />
-      <view wx:else class="avatar-ph profile-avatar">{{userInfo.nickName[0]}}</view>
+      <view wx:else class="avatar-ph profile-avatar">{{userInfo.nickName ? userInfo.nickName[0] : '学'}}</view>
       <view class="avatar-badge">📷</view>
     </button>
     <view class="profile-main">
-      <text class="profile-name">{{userInfo.nickName}}</text>
-      <text class="profile-sub">微信用户 · 已登录 · 点击头像可更换</text>
+      <text class="profile-name">{{userInfo.nickName || '未填写姓名'}}</text>
+      <text class="profile-sub">{{userInfo.className || '未填写班级'}}</text>
     </view>
   </view>
 
@@ -36,23 +36,98 @@
     </view>
   </view>
 
-  <!-- 资料行 -->
+  <!-- 资料行：姓名 / 班级（认定时提交，直接展示于此） -->
   <view class="rows-card card">
     <view class="row">
-      <text class="row-label">昵称</text>
+      <text class="row-label">姓名</text>
       <input
         class="row-input"
         type="nickname"
         value="{{userInfo.nickName}}"
-        placeholder="填写昵称"
+        placeholder="填写姓名"
         placeholder-class="input-placeholder"
         bindblur="onNicknameBlur"
       />
     </view>
     <view class="row">
       <text class="row-label">班级</text>
-      <text class="row-value">{{userInfo.className || '视觉传达2201班'}}</text>
+      <text class="row-value">{{userInfo.className || '未填写'}}</text>
     </view>
+  </view>
+
+  <!-- 账号认定（G-07：学号绑定，认定通过后才能发布/评论） -->
+  <view class="section-head">
+    <text class="section-title">账号认定</text>
+    <text class="section-extra">认定通过后可发布作品与评论</text>
+  </view>
+  <view class="bind-card card">
+    <!-- 已认定 -->
+    <view wx:if="{{bind.status === 'approved'}}" class="bind-row">
+      <view class="bind-main">
+        <text class="bind-title">已完成学号认定</text>
+        <text class="bind-note" wx:if="{{bind.studentId}}">学号 {{bind.studentId}}{{bind.realName ? ' · ' + bind.realName : ''}}{{bind.className ? ' · ' + bind.className : ''}}，可正常发布作品与评论</text>
+        <text class="bind-note" wx:else>存量账号已自动完成认定，可正常发布作品与评论</text>
+      </view>
+      <text class="tag tag-approved">已认定</text>
+    </view>
+
+    <!-- 待认定 -->
+    <view wx:elif="{{bind.status === 'pending'}}" class="bind-row">
+      <view class="bind-main">
+        <text class="bind-title">认定审核中</text>
+        <text class="bind-note">学号 {{bind.studentId}}{{bind.realName ? ' · ' + bind.realName : ''}}{{bind.className ? ' · ' + bind.className : ''}} 已提交，管理员认定通过后即可发布内容</text>
+      </view>
+      <text class="tag tag-pending">待认定</text>
+    </view>
+
+    <!-- 未绑定 / 已驳回 → 绑定表单 -->
+    <block wx:else>
+      <view wx:if="{{bind.status === 'rejected'}}" class="bind-reject">
+        <text class="bind-reject-text">认定未通过：{{bind.rejectReason || '学号信息核对未通过'}}，请修正后重新提交</text>
+      </view>
+      <view wx:else class="bind-reject">
+        <text class="bind-reject-text bind-tip">填写学号、姓名、班级并通过管理员认定后，才能发布作品与评论；未认定前可正常浏览</text>
+      </view>
+      <view class="bind-form">
+        <view class="bind-field">
+          <text class="bind-label">学号</text>
+          <input
+            class="bind-input"
+            value="{{bindForm.studentId}}"
+            placeholder="请输入本人学号"
+            placeholder-class="input-placeholder"
+            maxlength="20"
+            bindinput="onBindIdInput"
+          />
+        </view>
+        <view class="bind-field">
+          <text class="bind-label">姓名</text>
+          <input
+            class="bind-input"
+            value="{{bindForm.realName}}"
+            placeholder="请输入真实姓名"
+            placeholder-class="input-placeholder"
+            maxlength="20"
+            bindinput="onBindNameInput"
+          />
+        </view>
+        <view class="bind-field">
+          <text class="bind-label">班级</text>
+          <input
+            class="bind-input"
+            value="{{bindForm.className}}"
+            placeholder="如：视觉传达2201班"
+            placeholder-class="input-placeholder"
+            maxlength="30"
+            bindinput="onBindClassInput"
+          />
+        </view>
+        <text class="bind-form-note">姓名与班级将直接作为你的展示资料（作品作者名 / 班级），提交后可在上方查看</text>
+        <button class="btn-primary bind-submit" disabled="{{bindSubmitting}}" bindtap="submitBind">
+          {{bindSubmitting ? '提交中…' : (bind.status === 'rejected' ? '重新提交认定' : '提交认定申请')}}
+        </button>
+      </view>
+    </block>
   </view>
 
   <!-- 审核状态追踪 -->
@@ -126,7 +201,14 @@
           <view class="work-title">{{item.title}}</view>
           <view class="work-foot">
             <text class="work-time">{{item.timeText}}</text>
-            <text class="tag {{item.statusCls}}">{{item.statusText}}</text>
+            <view class="foot-right">
+              <text class="tag {{item.statusCls}}">{{item.statusText}}</text>
+              <text
+                class="work-del-btn"
+                data-id="{{item.id}}"
+                catchtap="onDeleteWork"
+              >删除</text>
+            </view>
           </view>
         </view>
       </view>
@@ -154,7 +236,14 @@
           <view class="work-title">{{item.title}}</view>
           <view class="work-foot">
             <text class="work-time">{{item.timeText}}</text>
-            <text class="tag {{item.statusCls}}">{{item.statusText}}</text>
+            <view class="foot-right">
+              <text class="tag {{item.statusCls}}">{{item.statusText}}</text>
+              <text
+                class="work-del-btn"
+                data-id="{{item.id}}"
+                catchtap="onDeleteWork"
+              >删除</text>
+            </view>
           </view>
         </view>
       </view>

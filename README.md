@@ -56,7 +56,7 @@ npm run dev                 # http://localhost:5173（/api 代理到 localhost:3
 
 | 层 | 形态 | 说明 |
 |---|---|---|
-| 后端 | HTTP 云函数 `meiyu-api` | `node scripts/sync-fn.js` 组装函数包 → `manageFunctions createFunction`（或控制台上传 `deploy/cloudfunctions/`），scf_bootstrap 监听 9000 |
+| 后端 | HTTP 云函数 `meiyu-api` | `node scripts/sync-fn.js` 组装函数包 → `python scripts/pack-fn.py` 打包 → `node scripts/deploy-fn-code.js` 只更新线上代码包（SCF UpdateFunctionCode，不动类型/环境变量/网关路由）；或控制台上传 `deploy/cloudfunctions/` |
 | 网关 | 路由 `/api` → meiyu-api | enablePathTransmission=true（透传完整路径） |
 | 管理端 | 静态网站托管 | `VITE_API_BASE=<云函数域名>/api npm run build`，上传 `dist/`，404 回退 index.html |
 | 数据 | CloudBase PostgreSQL | 走 OpenAPI ExecutePGSql 通道，密钥放云函数环境变量 |

@@ -17,7 +17,7 @@
  *      POST /user/login      { code }                  静默登录
  */
 
-const { get, post, BASE_URL } = require('./request');
+const { get, post, patch, BASE_URL } = require('./request');
 const mock = require('./mock');
 
 /** 分类清单（与原型一致：全部/书法/绘画/摄影/手工/其他艺术） */
@@ -53,6 +53,32 @@ const api = {
   getProfile: () =>
     withMock(get('/user/profile', {}, { silent: true }), () => mock.profile(), 'user/profile'),
 
+  /**
+   * 更新昵称 / 头像（PATCH /user/profile）
+   * 不降级 mock：mock 模式下本地 storage 已兜底展示，静默失败即可
+   * @param {object} data { nickName?, avatarUrl? }
+   */
+  updateProfile: (data) => patch('/user/profile', data, { silent: true }),
+
+  /* ---------- 学号绑定认定（G-07：绑定前只能预览，认定后才能发布/评论） ---------- */
+  /**
+   * 查询当前账号认定状态
+   * @returns {Promise<{bindStatus:'unbound'|'pending'|'approved'|'rejected', studentId, realName, className, rejectReason}>}
+   */
+  getBindStatus: () =>
+    withMock(
+      get('/user/bind-status', {}, { silent: true }),
+      () => Promise.resolve({ bindStatus: 'approved', studentId: '', realName: '', className: '', rejectReason: '' }),
+      'user/bind-status'
+    ),
+
+  /**
+   * 提交学号绑定申请（静默失败由调用方自行提示）
+   * 姓名与班级会即时写入用户资料（昵称/班级展示位随之更新），不等审核。
+   * @param {object} data { studentId, realName, className }
+   */
+  bindStudent: (data) => post('/user/bind-student', data, { silent: true }),
+
   /* ---------- 作品 ---------- */
   /**
    * 作品列表（每页 20 条，游标分页）
@@ -87,15 +113,33 @@ const api = {
     withMock(get('/work/mine', {}, { silent: true }), () => mock.getMyWorks(), 'work/mine'),
 
   /* ---------- 评论 ---------- */
+  /**
+   * 评论树。携带登录态请求，服务端会为「可删除」的评论下发 canDelete 标记
+   * （评论作者本人 / 作品作者可删），前端据此渲染「删除」按钮
+   */
   listComments: (workId) =>
     withMock(
-      get('/comment/list', { workId }, { needAuth: false, silent: true }),
+      get('/comment/list', { workId }, { silent: true }),
       () => mock.listComments({ workId }),
       'comment/list'
     ),
 
   addComment: (data) =>
     withMock(post('/comment/add', data, { silent: true }), () => mock.addComment(data), 'comment/add'),
+
+  /**
+   * 删除评论（评论作者本人 或 作品作者）
+   * 删除一级评论会连同其下所有回复一起删除
+   * @param {number|string} commentId
+   */
+  deleteComment: (commentId) => post('/comment/delete', { commentId }, { silent: true }),
+
+  /**
+   * 删除自己发布的作品（严格模式，无 mock 兜底）
+   * 服务端校验仅作者本人可删，并级联删除该作品的全部留言与点赞
+   * @param {number|string} workId
+   */
+  deleteWork: (workId) => post('/work/delete', { workId }, { silent: true }),
 
   /* ---------- 课程 ---------- */
   getCourses: () =>
@@ -124,36 +168,84 @@ const api = {
 
   /* ---------- 图片上传 ---------- */
   /**
-   * 上传单张图片；后端未提供上传接口时回退本地临时路径（演示模式）
-   * 永不 reject，发布主链路不因上传阻塞
-   * @returns {Promise<string>} 图片 URL
+   * 上传单张图片到后端（pgstore 云存储 / 本地兜底）
+   * 严格模式：上传失败直接 reject，绝不回退本地临时路径——
+   * wxfile:// 路径只有当前设备可用，一旦入库作品图片将永久无法展示
+   *
+   * ⚠️ 关键：服务端 /work/upload 受 auth 中间件保护，而 wx.uploadFile
+   *    与 wx.request 是两套独立通道，**不会**自动带上本地 Token。
+   *    必须显式注入 Authorization 头，否则服务端直接 401，表现为
+   *    「图片上传失败」——发布功能整体不可用。
+   * @returns {Promise<string>} 图片公网 URL
    */
-  uploadImage: (filePath) =>
-    new Promise((resolve) => {
+  uploadImage: async (filePath) => {
+    // 与 request 层对齐：首屏发布时静默登录可能尚未落盘，先确保登录态就绪
+    if (!wx.getStorageSync('token')) {
+      try {
+        const app = getApp();
+        if (app && typeof app.ensureLogin === 'function') await app.ensureLogin();
+      } catch (e) {
+        // 登录失败不在这里拦，交给服务端返回 401 后给出明确提示
+        console.warn('[api] 上传前登录态准备失败:', e && e.message);
+      }
+    }
+    const token = wx.getStorageSync('token') || '';
+
+    return new Promise((resolve, reject) => {
       wx.uploadFile({
         url: BASE_URL + '/work/upload',
         filePath,
         name: 'file',
-        timeout: 10000,
+        timeout: 20000,
+        header: token ? { Authorization: 'Bearer ' + token } : {},
         success: (res) => {
+          let body = null;
           try {
-            const body = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-            if (body && body.code === 200 && body.data && body.data.url) {
-              resolve(body.data.url);
-              return;
-            }
+            body = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
           } catch (e) {
-            // 非 JSON 响应，走降级
+            body = null;
           }
-          console.warn('[api] 上传响应异常，回退本地路径（演示模式）');
-          resolve(filePath);
+
+          // 成功
+          if (body && body.code === 200 && body.data && body.data.url) {
+            resolve(body.data.url);
+            return;
+          }
+
+          // 登录态失效：清缓存并重新静默登录，提示用户重试
+          if (res.statusCode === 401 || (body && body.code === 401)) {
+            const app = getApp();
+            if (app && typeof app.relogin === 'function') app.relogin();
+            reject(new Error('登录已失效，请重新进入小程序后再试'));
+            return;
+          }
+
+          // 体积超限：把服务端的可操作提示原样透出
+          if (res.statusCode === 413 || (body && body.code === 413)) {
+            reject(new Error((body && body.message) || '图片体积过大，请换一张后重试'));
+            return;
+          }
+
+          console.warn('[api] 上传响应异常:', res.statusCode, body && (body.message || body.code));
+          reject(new Error((body && body.message) || '图片上传失败，请稍后重试'));
         },
         fail: (err) => {
-          console.warn('[api] 上传不可用，回退本地路径（演示模式）:', err && err.errMsg);
-          resolve(filePath);
+          const msg = (err && err.errMsg) || '';
+          console.warn('[api] 上传失败:', msg);
+          // 体验版/真机未配置 uploadFile 合法域名
+          if (msg.indexOf('domain') !== -1) {
+            reject(new Error('当前环境未配置服务器域名，请在微信公众平台添加 uploadFile 合法域名'));
+            return;
+          }
+          if (msg.indexOf('timeout') !== -1) {
+            reject(new Error('图片上传超时，请检查网络后重试'));
+            return;
+          }
+          reject(new Error('图片上传失败，请检查网络后重试'));
         }
       });
-    })
+    });
+  }
 };
 
 module.exports = api;

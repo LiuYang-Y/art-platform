@@ -105,18 +105,42 @@
                 data-name="{{item.userName}}"
                 catchtap="setReplyTo"
               >回复</text>
+              <text
+                wx:if="{{item.canDelete}}"
+                class="comment-del-btn"
+                data-id="{{item.id}}"
+                data-replies="{{item.replies.length}}"
+                catchtap="onDeleteComment"
+              >删除</text>
             </view>
 
-            <!-- 一层嵌套回复 -->
+            <!-- 二级回复：同一根评论下的所有回复平铺展示，均可继续回复 -->
             <view class="reply-list" wx:if="{{item.replies.length}}">
               <view class="reply-item" wx:for="{{item.replies}}" wx:for-item="reply" wx:key="id">
-                <view class="comment-head">
-                  <text class="comment-name">{{reply.userName}}</text>
-                  <text wx:if="{{reply.isAuthorReply}}" class="author-badge">作者回复</text>
-                </view>
-                <view class="comment-content">{{reply.content}}</view>
-                <view class="comment-foot">
-                  <text class="comment-time">{{reply.timeText}}</text>
+                <view class="avatar-ph reply-avatar">{{reply.userName[0]}}</view>
+                <view class="reply-body">
+                  <view class="comment-head">
+                    <text class="comment-name">{{reply.userName}}</text>
+                    <text wx:if="{{reply.isAuthorReply}}" class="author-badge">作者回复</text>
+                  </view>
+                  <view class="comment-content">
+                    <text wx:if="{{reply.replyToName}}" class="reply-to">回复 @{{reply.replyToName}}：</text>{{reply.content}}
+                  </view>
+                  <view class="comment-foot">
+                    <text class="comment-time">{{reply.timeText}}</text>
+                    <text
+                      class="comment-reply-btn"
+                      data-id="{{reply.id}}"
+                      data-name="{{reply.userName}}"
+                      catchtap="setReplyTo"
+                    >回复</text>
+                    <text
+                      wx:if="{{reply.canDelete}}"
+                      class="comment-del-btn"
+                      data-id="{{reply.id}}"
+                      catchtap="onDeleteComment"
+                    >删除</text>
+                  </view>
                 </view>
               </view>
             </view>
@@ -146,6 +170,7 @@
           placeholder="{{replyTo ? '回复 @' + replyTo.name + '：' : '说点什么，鼓励一下作者'}}"
           placeholder-class="input-placeholder"
           value="{{inputValue}}"
+          focus="{{inputFocus}}"
           confirm-type="send"
           bindinput="onCommentInput"
           bindconfirm="sendComment"

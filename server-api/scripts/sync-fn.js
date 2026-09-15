@@ -84,4 +84,7 @@ if (fs.existsSync(NM_DIR)) {
 
 console.log('\n=== 组装完成 ===');
 console.log('函数目录:', FN_DIR);
-console.log('下一步：manageFunctions(action="createFunction"/"updateFunctionCode", functionRootPath=<cloudfunctions 父目录>)\n');
+console.log('下一步（二选一）：');
+console.log('  A) 只更新线上代码包（推荐，不动函数类型/环境变量/网关路由）：');
+console.log('     python scripts/pack-fn.py && node scripts/deploy-fn-code.js');
+console.log('  B) 控制台上传 deploy/cloudfunctions/ 目录\n');

@@ -1,7 +1,6 @@
 .page {
   box-sizing: border-box;
   min-height: 100vh;
-  background-color: var(--color-bg);
 }
 
 /* ---------- 加载 / 错误态 ---------- */
@@ -31,7 +30,7 @@
 .gallery-swiper {
   width: 100%;
   height: 780rpx;
-  background-color: #E9E2D5;
+  background-color: rgba(255, 255, 255, 0.35);
 }
 
 .gallery-img,
@@ -65,7 +64,10 @@
   padding: 6rpx 24rpx;
   font-size: var(--font-sm);
   color: #ffffff;
-  background-color: rgba(0, 0, 0, 0.45);
+  background-color: rgba(30, 24, 20, 0.38);
+  backdrop-filter: blur(16rpx);
+  -webkit-backdrop-filter: blur(16rpx);
+  border: 1rpx solid rgba(255, 255, 255, 0.35);
   border-radius: 999rpx;
 }
 
@@ -130,14 +132,16 @@
   justify-content: center;
   font-size: var(--font-sm);
   color: var(--color-primary);
-  border: 2rpx solid var(--color-primary);
+  border: 2rpx solid rgba(200, 75, 49, 0.55);
   border-radius: 999rpx;
-  background-color: var(--color-card);
+  background-color: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16rpx);
+  -webkit-backdrop-filter: blur(16rpx);
 }
 
 .follow-btn.followed {
   color: var(--color-text-weak);
-  border-color: var(--color-border);
+  border-color: var(--color-line);
 }
 
 /* ---------- 创作说明（典雅排版） ---------- */
@@ -157,7 +161,7 @@
   padding-left: var(--space-sm);
   border-left: 6rpx solid var(--color-accent);
   font-family: 'Kaiti SC', 'STKaiti', KaiTi, 'FZKai-Z03S', serif;
-  font-size: 20px;
+  font-size: var(--font-lg);
   color: #4A4038;
   line-height: 1.9;
   letter-spacing: 2rpx;
@@ -184,7 +188,8 @@
   min-width: 150rpx;
   min-height: 72rpx;
   padding: 0 var(--space-md);
-  background-color: var(--color-primary-light);
+  background-color: rgba(200, 75, 49, 0.10);
+  border: 1rpx solid rgba(200, 75, 49, 0.16);
   border-radius: 999rpx;
 }
 
@@ -213,13 +218,15 @@
   margin-left: var(--space-sm);
   font-size: var(--font-sm);
   color: var(--color-text-sub);
-  background-color: var(--color-bg);
+  background-color: rgba(255, 255, 255, 0.50);
+  border: var(--glass-border);
   border-radius: 999rpx;
 }
 
 .fav-pill.faved {
   color: var(--color-accent);
   background-color: var(--color-accent-light);
+  border-color: rgba(232, 133, 61, 0.30);
 }
 
 .share-pill {
@@ -230,7 +237,8 @@
   align-items: center;
   font-size: var(--font-sm);
   color: var(--color-text-sub);
-  background-color: var(--color-bg);
+  background-color: rgba(255, 255, 255, 0.50);
+  border: var(--glass-border);
   border-radius: 999rpx;
   line-height: 1.4;
 }
@@ -254,7 +262,7 @@
 .comment-item {
   display: flex;
   padding: var(--space-sm) 0;
-  border-bottom: 2rpx solid var(--color-border);
+  border-bottom: 2rpx solid var(--color-line);
 }
 
 .comment-item:last-child {
@@ -290,7 +298,8 @@
   padding: 2rpx 16rpx;
   font-size: var(--font-sm);
   color: var(--color-primary);
-  background-color: var(--color-primary-light);
+  background-color: rgba(200, 75, 49, 0.10);
+  border: 1rpx solid rgba(200, 75, 49, 0.18);
   border-radius: 999rpx;
 }
 
@@ -322,34 +331,66 @@
   color: var(--color-primary);
 }
 
+/* 删除按钮：与「回复」同排，弱化配色避免误触 */
+.comment-del-btn {
+  margin-left: var(--space-md);
+  min-height: var(--touch-min);
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}
+
 .reply-list {
   margin-top: var(--space-sm);
   padding: var(--space-sm);
-  background-color: var(--color-bg);
+  background-color: rgba(255, 255, 255, 0.42);
+  border: 1rpx solid rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-sm);
 }
 
 .reply-item {
+  display: flex;
   padding: var(--space-xs) 0;
 }
 
+.reply-avatar {
+  flex-shrink: 0;
+  width: 52rpx;
+  height: 52rpx;
+  font-size: 22rpx;
+}
+
+.reply-body {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--space-xs);
+}
+
+/* 「回复 @xxx」前缀高亮 */
+.reply-to {
+  color: var(--color-primary);
+}
+
 .reply-item + .reply-item {
-  border-top: 2rpx solid var(--color-border);
+  border-top: 2rpx solid var(--color-line);
 }
 
 .bottom-space {
   height: 260rpx;
 }
 
-/* ---------- 底部固定留言栏 ---------- */
+/* ---------- 底部固定留言栏（玻璃悬浮） ---------- */
 .comment-bar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--color-card);
-  border-top: 2rpx solid var(--color-border);
-  box-shadow: 0 -4rpx 16rpx rgba(96, 70, 44, 0.06);
+  background-color: rgba(255, 255, 255, 0.72);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1rpx solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 -8rpx 32rpx rgba(120, 90, 60, 0.10);
 }
 
 .quick-scroll {
@@ -369,7 +410,8 @@
   margin-right: var(--space-sm);
   font-size: var(--font-sm);
   color: var(--color-text-sub);
-  background-color: var(--color-bg);
+  background-color: rgba(255, 255, 255, 0.55);
+  border: 1rpx solid rgba(255, 255, 255, 0.7);
   border-radius: 999rpx;
 }
 
@@ -385,7 +427,8 @@
   padding: 0 var(--space-md);
   font-size: var(--font-base);
   color: var(--color-text);
-  background-color: var(--color-bg);
+  background-color: rgba(255, 255, 255, 0.60);
+  border: 1rpx solid rgba(255, 255, 255, 0.75);
   border-radius: 999rpx;
 }
 
@@ -412,8 +455,9 @@
   font-size: var(--font-base);
   font-weight: 600;
   color: #ffffff;
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
   border-radius: 999rpx;
+  box-shadow: 0 6rpx 18rpx rgba(200, 75, 49, 0.30);
 }
 
 .send-disabled {

@@ -287,11 +287,38 @@ Page({
       return;
     }
 
+    // G-07：学号绑定认定门槛 —— 未认定账号只能预览，不能发布
+    try {
+      const bind = await api.getBindStatus();
+      if (bind && bind.bindStatus !== 'approved') {
+        const tip =
+          bind.bindStatus === 'pending'
+            ? '你的学号绑定申请正在认定中，通过后即可发布作品。'
+            : bind.bindStatus === 'rejected'
+              ? '你的学号绑定未通过认定，请修正后重新提交。'
+              : '发布作品前需先完成学号绑定认定，前往「我的」页提交申请。';
+        wx.showModal({
+          title: '需要先完成账号认定',
+          content: tip,
+          confirmText: '去认定',
+          cancelText: '再逛逛',
+          success: (r) => {
+            if (r.confirm) wx.switchTab({ url: '/pages/mine/mine' });
+          }
+        });
+        return;
+      }
+    } catch (e) {
+      // 状态查询失败不阻塞，由服务端 createWork 的门槛最终拦截
+      console.warn('[publish] 认定状态预检失败:', e && e.message);
+    }
+
     this.setData({ submitting: true });
     wx.showLoading({ title: '正在提交…', mask: true });
 
     try {
-      // 逐张上传（后端无上传接口时 api 层自动回退本地路径，不阻塞发布）
+      // 逐张上传到云存储换公网 URL（严格模式：任一张失败则终止发布，
+      // 绝不把 wxfile:// 本机临时路径入库——其他端将永久裂图）
       const urls = [];
       for (let i = 0; i < this.data.images.length; i++) {
         const url = await api.uploadImage(this.data.images[i].path);
@@ -320,8 +347,19 @@ Page({
       });
     } catch (err) {
       wx.hideLoading();
-      console.warn('[publish] 提交失败:', err && err.message);
-      wx.showToast({ title: (err && err.message) || '提交失败，请重试', icon: 'none' });
+      const msg = (err && err.message) || '提交失败，请重试';
+      console.warn('[publish] 提交失败:', msg);
+      // 引导类提示（如域名未配置、登录失效）较长，toast 会截断，改用弹窗
+      if (msg.length > 14) {
+        wx.showModal({
+          title: '发布失败',
+          content: msg,
+          showCancel: false,
+          confirmText: '知道了'
+        });
+      } else {
+        wx.showToast({ title: msg, icon: 'none' });
+      }
     } finally {
       this.setData({ submitting: false });
     }

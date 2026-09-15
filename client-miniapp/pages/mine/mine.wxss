@@ -99,7 +99,7 @@
 .stat-divider {
   width: 2rpx;
   height: 64rpx;
-  background-color: var(--color-border);
+  background-color: var(--color-line);
 }
 
 /* ---------- 资料行 ---------- */
@@ -113,7 +113,7 @@
   align-items: center;
   justify-content: space-between;
   min-height: 104rpx;
-  border-bottom: 2rpx solid var(--color-border);
+  border-bottom: 2rpx solid var(--color-line);
 }
 
 .rows-card .row:last-child {
@@ -165,7 +165,7 @@
   display: flex;
   align-items: center;
   padding: var(--space-sm) 0;
-  border-bottom: 2rpx solid var(--color-border);
+  border-bottom: 2rpx solid var(--color-line);
   min-height: var(--touch-min);
 }
 
@@ -238,7 +238,10 @@
 
 .work-card {
   margin-bottom: 20rpx;
-  background-color: var(--color-card);
+  background-color: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-card);
@@ -294,6 +297,118 @@
 .work-time {
   font-size: var(--font-sm);
   color: var(--color-text-weak);
+}
+
+/* 状态标签 + 删除按钮同排；删除弱化配色避免误触（与详情页留言删除一致） */
+.foot-right {
+  display: flex;
+  align-items: center;
+}
+
+.work-del-btn {
+  margin-left: 10rpx;
+  min-height: var(--touch-min);
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+}
+
+.work-del-btn:active {
+  color: var(--color-primary);
+}
+
+/* ---------- 账号认定（G-07 学号绑定） ---------- */
+.bind-card {
+  padding: var(--space-md);
+}
+
+.bind-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--touch-min);
+}
+
+.bind-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin-right: var(--space-sm);
+}
+
+.bind-title {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.bind-note {
+  margin-top: 6rpx;
+  font-size: var(--font-sm);
+  color: var(--color-text-weak);
+  line-height: 1.5;
+}
+
+.bind-reject {
+  margin-bottom: var(--space-sm);
+  padding: 16rpx 20rpx;
+  background: rgba(200, 75, 49, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+.bind-reject-text {
+  font-size: var(--font-sm);
+  color: #c84b31;
+  line-height: 1.6;
+}
+
+.bind-reject .bind-tip,
+.bind-tip {
+  color: var(--color-text-sub);
+}
+
+.bind-reject:has(.bind-tip) {
+  background: rgba(61, 90, 128, 0.08);
+}
+
+.bind-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.bind-field {
+  display: flex;
+  align-items: center;
+  min-height: 96rpx;
+  border-bottom: 2rpx solid var(--color-line);
+}
+
+.bind-label {
+  width: 96rpx;
+  font-size: var(--font-base);
+  color: var(--color-text);
+}
+
+.bind-input {
+  flex: 1;
+  min-height: var(--touch-min);
+  font-size: var(--font-base);
+  color: var(--color-text);
+}
+
+.bind-submit {
+  margin-top: var(--space-md);
+  width: 100%;
+}
+
+/* 认定表单说明：姓名/班级会直接成为展示资料 */
+.bind-form-note {
+  margin-top: var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--color-text-sub);
+  line-height: 1.6;
 }
 
 /* ---------- 设置 ---------- */

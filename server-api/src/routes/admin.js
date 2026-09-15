@@ -8,6 +8,8 @@
  *   POST /api/admin/work/reject        驳回作品
  *   GET  /api/admin/stats              工作台运营指标（G-04）
  *   GET  /api/admin/users              用户管理列表（G-02）
+ *   GET  /api/admin/classes            班级列表（用户管理下拉）
+ *   POST /api/admin/user/update        修改用户资料：昵称 / 姓名 / 班级（G-02）
  *   POST /api/admin/user/status        启用/禁用用户（G-02）
  *   GET  /api/admin/sensitive          敏感词库列表（G-06）
  *   GET  /api/admin/sensitive/categories  敏感词分类统计
@@ -29,7 +31,13 @@ router.post('/work/approve', authRole('admin'), adminController.approveWork);
 router.post('/work/reject', authRole('admin'), adminController.rejectWork);
 router.get('/stats', authRole('admin'), adminController.getStats);
 router.get('/users', authRole('admin'), adminController.listUsers);
+router.get('/classes', authRole('admin'), adminController.listClasses);
+router.post('/user/update', authRole('admin'), adminController.updateUser);
 router.post('/user/status', authRole('admin'), adminController.setUserStatus);
+
+// —— G-07 账号认定（学号绑定审核）——
+router.get('/bind-applications', authRole('admin'), adminController.listBindApplications);
+router.post('/bind-audit', authRole('admin'), adminController.auditBindApplication);
 
 // —— G-06 敏感词库管理 ——
 router.get('/sensitive/categories', authRole('admin'), sensitiveController.categoryStats);

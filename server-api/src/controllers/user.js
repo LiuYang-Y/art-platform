@@ -11,6 +11,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { query, queryOne, insertReturningId } = require('../utils/config/db');
 const { success, fail } = require('../utils/response');
+const { findOrCreateClassId } = require('../utils/classResolve');
 
 const JSCODE2SESSION_URL = 'https://api.weixin.qq.com/sns/jscode2session';
 const DEFAULT_ROLE = 'student';
@@ -51,9 +52,26 @@ async function resolveDefaultClassId() {
   );
 }
 
-/** 按 openid 查询用户 */
+/** 按 openid 查询用户（带班级名，供 toUserInfo 输出 className） */
 function findUserByOpenid(openid) {
-  return queryOne('SELECT * FROM users WHERE openid = $1', [openid]);
+  return queryOne(
+    `SELECT u.*, c.class_name
+     FROM users u
+     LEFT JOIN classes c ON c.id = u.class_id
+     WHERE u.openid = $1`,
+    [openid]
+  );
+}
+
+/** 按 id 查询用户（带班级名） */
+function findUserById(id) {
+  return queryOne(
+    `SELECT u.*, c.class_name
+     FROM users u
+     LEFT JOIN classes c ON c.id = u.class_id
+     WHERE u.id = $1`,
+    [Number(id)]
+  );
 }
 
 /** 对外用户信息（驼峰字段） */
@@ -62,10 +80,14 @@ function toUserInfo(user) {
     userId: user.id,
     openid: user.openid,
     nickName: user.nick_name,
+    realName: user.real_name || '',
+    className: user.class_name || '',
     avatarUrl: user.avatar_url,
     role: user.role,
     classId: user.class_id,
     status: user.status,
+    bindStatus: user.bind_status || 'unbound',
+    studentId: user.student_id ? String(user.student_id) : '',
     createTime: user.created_at,
     lastLoginTime: user.last_login_at
   };
@@ -162,6 +184,11 @@ async function loginByPassword(req, res) {
     const user = await queryOne('SELECT * FROM users WHERE username = $1', [username.trim()]);
     if (!user) return fail(res, '账号或密码错误', 400);
 
+    // Web 端不再开放学生登录：学生统一走微信小程序（G-07）
+    if ((user.role || 'student') === 'student') {
+      return fail(res, '学生账号请使用微信小程序登录，Web 端仅面向教师与管理员', 403, 403);
+    }
+
     // G-02：被管理员停用的用户禁止登录
     if ((user.status || 'active') !== 'active') {
       return fail(res, '该账号已被停用，如有疑问请联系管理员', 403, 403);
@@ -205,7 +232,7 @@ async function loginByPassword(req, res) {
 /** GET /api/user/profile */
 async function getProfile(req, res) {
   try {
-    const user = await queryOne('SELECT * FROM users WHERE id = $1', [req.user.userId]);
+    const user = await findUserById(req.user.userId);
     if (!user) return fail(res, '用户不存在', 404);
     return success(res, toUserInfo(user), '查询成功');
   } catch (err) {
@@ -214,7 +241,11 @@ async function getProfile(req, res) {
   }
 }
 
-/** PATCH /api/user/profile（需鉴权）更新昵称 / 头像 */
+/**
+ * PATCH /api/user/profile（需鉴权）更新昵称 / 头像
+ * 平台已取消「昵称」概念：昵称即姓名，写入时双写 real_name，
+ * 保证 Web 用户管理与小程序展示口径一致。
+ */
 async function updateProfile(req, res) {
   const { nickName, avatarUrl } = req.body || {};
   const sets = [];
@@ -222,8 +253,12 @@ async function updateProfile(req, res) {
   let idx = 1;
 
   if (typeof nickName === 'string' && nickName.trim() !== '') {
+    const v = nickName.trim();
+    if (v.length > 30) return fail(res, '姓名最长 30 个字符', 400);
     sets.push(`nick_name = $${idx++}`);
-    values.push(nickName.trim());
+    values.push(v);
+    sets.push(`real_name = $${idx++}`);
+    values.push(v);
   }
   if (typeof avatarUrl === 'string' && avatarUrl.trim() !== '') {
     sets.push(`avatar_url = $${idx++}`);
@@ -239,7 +274,7 @@ async function updateProfile(req, res) {
 
   try {
     await query(`UPDATE users SET ${sets.join(', ')} WHERE id = $${idx}`, values);
-    const user = await queryOne('SELECT * FROM users WHERE id = $1', [req.user.userId]);
+    const user = await findUserById(req.user.userId);
     return success(res, toUserInfo(user), '更新成功');
   } catch (err) {
     console.error('[user] 更新用户信息异常:', err.message);
@@ -247,4 +282,137 @@ async function updateProfile(req, res) {
   }
 }
 
-module.exports = { login, loginByPassword, getProfile, updateProfile };
+/* ------------------------------------------------------------------ */
+/* 学号绑定认定（G-07）：绑定前只能预览，认定通过后才能发布 / 评论        */
+/* ------------------------------------------------------------------ */
+
+/** 学号格式：6-20 位数字或字母（兼容含字母的学号） */
+const STUDENT_ID_RE = /^[0-9A-Za-z]{6,20}$/;
+
+/** GET /api/user/bind-status（需鉴权）查询当前账号认定状态 */
+async function getBindStatus(req, res) {
+  try {
+    const user = await queryOne(
+      `SELECT u.bind_status, u.student_id, u.real_name, u.class_id,
+              u.bind_apply_at, u.bind_audit_at, u.bind_reject_reason,
+              c.class_name
+       FROM users u
+       LEFT JOIN classes c ON c.id = u.class_id
+       WHERE u.id = $1`,
+      [req.user.userId]
+    );
+    if (!user) return fail(res, '用户不存在', 404);
+
+    return success(
+      res,
+      {
+        bindStatus: user.bind_status || 'unbound',
+        studentId: user.student_id ? String(user.student_id) : '',
+        realName: user.real_name || '',
+        className: user.class_name || '',
+        applyTime: user.bind_apply_at,
+        auditTime: user.bind_audit_at,
+        rejectReason: user.bind_reject_reason || ''
+      },
+      '查询成功'
+    );
+  } catch (err) {
+    console.error('[user] 查询认定状态异常:', err.message);
+    return fail(res, '查询失败', 500);
+  }
+}
+
+/**
+ * POST /api/user/bind-student（需鉴权）提交学号绑定申请
+ * Body: { studentId, realName, className }
+ * 状态机：unbound / rejected → pending（待管理员认定）；pending 可重复提交（覆盖）；
+ *         approved 不可重复绑定。
+ * 学号全局唯一：已被其他账号认定/申请中的学号不可再绑定。
+ *
+ * 姓名与班级在提交时即写入用户资料（不等审核）：
+ *   - realName → real_name，并双写 nick_name（所有展示链路立即显示本人姓名）
+ *   - className → 命中已有班级则复用，否则自动建档，写入 class_id
+ * 这样管理员在 Web 端「账号认定」页看到的姓名/学号/班级就是学生自己填的，
+ * 认定通过后也无需再手工补资料。
+ */
+async function bindStudent(req, res) {
+  const { studentId, realName, className } = req.body || {};
+  const sid = String(studentId || '').trim();
+  const name = String(realName || '').trim();
+  const clsName = String(className || '').trim();
+
+  if (!STUDENT_ID_RE.test(sid)) {
+    return fail(res, '学号格式不正确（6-20 位数字或字母）', 400);
+  }
+  if (!name) return fail(res, '请填写姓名', 400);
+  if (name.length > 30) return fail(res, '姓名最长 30 个字符', 400);
+  if (!clsName) return fail(res, '请填写班级', 400);
+
+  try {
+    const user = await queryOne('SELECT bind_status, student_id FROM users WHERE id = $1', [
+      req.user.userId
+    ]);
+    if (!user) return fail(res, '用户不存在', 404);
+
+    // 班级先落库（自动建档），失败则整单不提交
+    let classId;
+    try {
+      const cls = await findOrCreateClassId(clsName);
+      classId = cls.id;
+    } catch (err) {
+      return fail(res, err.message || '班级信息不合法', 400);
+    }
+
+    const cur = user.bind_status || 'unbound';
+    if (cur === 'approved' && user.student_id) {
+      return fail(res, `已绑定学号 ${user.student_id}，无需重复提交`, 400);
+    }
+
+    // 学号唯一性：被「其他账号」占用（待认定或已认定）则拒绝
+    // 注：student_id 是 varchar，而 OpenAPI 通道会把纯数字字符串还原成 Number，
+    //     入参必须是字符串，否则拼出 `varchar = bigint` 报 42883。
+    const occupied = await queryOne(
+      "SELECT id FROM users WHERE student_id = $1 AND bind_status IN ('pending','approved') AND id <> $2",
+      [sid, req.user.userId]
+    );
+    if (occupied) {
+      return fail(res, '该学号已被其他账号绑定或正在认定中，如有疑问请联系管理员', 400);
+    }
+
+    // 存量已认定账号（approved 但尚未登记学号）：直接登记，无需再次审核
+    if (cur === 'approved') {
+      await query(
+        `UPDATE users
+         SET student_id = $1, real_name = $2, nick_name = $2, class_id = $3,
+             bind_audit_at = $4, updated_at = $4
+         WHERE id = $5`,
+        [sid, name, classId, new Date(), req.user.userId]
+      );
+      return success(
+        res,
+        { bindStatus: 'approved', studentId: sid, realName: name, className: clsName },
+        '学号登记成功'
+      );
+    }
+
+    await query(
+      `UPDATE users
+       SET student_id = $1, real_name = $2, nick_name = $2, class_id = $3,
+           bind_status = 'pending',
+           bind_apply_at = $4, bind_audit_at = NULL, bind_reject_reason = NULL, updated_at = $4
+       WHERE id = $5`,
+      [sid, name, classId, new Date(), req.user.userId]
+    );
+
+    return success(
+      res,
+      { bindStatus: 'pending', studentId: sid, realName: name, className: clsName },
+      '绑定申请已提交，等待管理员认定'
+    );
+  } catch (err) {
+    console.error('[user] 学号绑定申请异常:', err.message);
+    return fail(res, `提交失败：${String(err.message || '未知错误').slice(0, 200)}`, 500);
+  }
+}
+
+module.exports = { login, loginByPassword, getProfile, updateProfile, getBindStatus, bindStudent };

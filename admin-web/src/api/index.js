@@ -15,7 +15,20 @@ export const rejectWork = (workId, reason) => request.post('/admin/work/reject',
 
 // ---------------- 用户管理 G-02 ----------------
 export const getAdminUsers = () => request.get('/admin/users')
+export const getAdminClasses = () => request.get('/admin/classes')
+/**
+ * 修改用户资料：{ userId, realName?, className? }
+ *  - realName：显示名（原「昵称」概念已取消），非空，最长 30 字
+ *  - className：班级名，自由输入；空串 = 清空班级；不存在的班级会自动创建
+ *  - classId：兼容旧调用（数字=指定班级；null=清空）
+ */
+export const updateAdminUser = (data) => request.post('/admin/user/update', data)
 export const setUserStatus = (userId, status) => request.post('/admin/user/status', { userId, status })
+
+// ---------------- 账号认定 G-07（学号绑定审核） ----------------
+export const getBindApplications = (params) => request.get('/admin/bind-applications', { params })
+export const auditBindApplication = (userId, action, reason) =>
+  request.post('/admin/bind-audit', { userId, action, reason })
 
 // ---------------- 课程管理 G-03 ----------------
 export const getCourses = (params) => request.get('/course/list', { params })

@@ -1,71 +1,104 @@
 /**
  * 全局样式与设计变量
  * ------------------------------------------------------------
- * 设计基调（对齐最终版原型 图 5-1 ~ 5-6）：
- *   暖米色底 + 白色卡片 + 红橙点缀（#C84B31 / #E8853D）
- * 适老化规范（Z-10）：
- *   基础字号 ≥ 18px，可点击热区 ≥ 48px；
- *   「我的」页可切换大字模式（基础字号 ≥ 22px）
+ * 设计基调（2026 改版 · iOS 液态玻璃 Liquid Glass）：
+ *   极光柔彩渐变底 + 半透明磨砂玻璃卡片（backdrop-filter 模糊）
+ *   + 高光描边 + 悬浮分层阴影，点缀品牌赭红/橙
+ * 字号两档制：
+ *   默认档：常规移动端阅读舒适值（正文 16px），避免整屏“老年模式”观感；
+ *   大字档（.font-large，适老化 Z-10）：正文 ≥ 22px，供「我的」页开关切换。
+ *   两档均保持可点击热区 ≥ 48px。
  */
 
 page {
-  /* ---------- 字号规范（一律 ≥ 18px） ---------- */
-  --font-sm: 18px;          /* 辅助说明（不小于正文） */
-  --font-base: 18px;        /* 正文字号 */
-  --font-lg: 21px;          /* 区块标题 */
-  --font-xl: 26px;          /* 页面主标题 */
-  --font-xxl: 34px;         /* 统计大数字 */
+  /* ---------- 字号规范（默认档：标准阅读尺寸） ---------- */
+  --font-sm: 15px;          /* 辅助说明 */
+  --font-base: 16px;        /* 正文字号 */
+  --font-lg: 19px;          /* 区块标题 */
+  --font-xl: 23px;          /* 页面主标题 */
+  --font-xxl: 30px;         /* 统计大数字 */
 
   /* ---------- 可点击热区 ---------- */
   --touch-min: 48px;        /* 最小可点击尺寸 48×48px */
 
-  /* ---------- 主题色：暖米色 + 红橙 ---------- */
+  /* ---------- 主题色：品牌赭红 + 橙（保持原品牌色） ---------- */
   --color-primary: #C84B31;       /* 主色 赭红 */
   --color-primary-deep: #A93A26;
-  --color-primary-light: #FBEDE8;
+  --color-primary-light: rgba(200, 75, 49, 0.12);
   --color-accent: #E8853D;        /* 点缀色 橙 */
-  --color-accent-light: #FCF0E4;
+  --color-accent-light: rgba(232, 133, 61, 0.14);
   --color-like: #E0503C;          /* 点赞红心 */
 
   /* ---------- 中性色 ---------- */
-  --color-text: #2E2823;
-  --color-text-sub: #796F63;
-  --color-text-weak: #A89C8D;
-  --color-bg: #F3EFE6;            /* 暖米色底 */
-  --color-card: #FFFFFF;
-  --color-border: #E9E2D5;
+  --color-text: #26221F;
+  --color-text-sub: #6E655C;
+  --color-text-weak: #A2988C;
+  --color-bg: #F5F2EC;            /* 兜底底色 */
+  --color-card: rgba(255, 255, 255, 0.55);
+  --color-card-solid: #FFFFFF;
+  --color-border: rgba(255, 255, 255, 0.62);
+  --color-line: rgba(120, 100, 80, 0.12);
+
+  /* ---------- 玻璃材质（iOS 26 液态玻璃：清晰镜面 + 透镜气泡） ---------- */
+  --glass-bg: rgba(255, 255, 255, 0.52);
+  --glass-bg-strong: rgba(255, 255, 255, 0.68);
+  --glass-blur: blur(60rpx) saturate(200%);
+  --glass-blur-soft: blur(30rpx) saturate(180%);
+  --glass-border: 1rpx solid rgba(255, 255, 255, 0.62);
+
+  /* 透镜玻璃（导航条/chip：更清透，背景色透出来；激活态为亮白透镜气泡） */
+  --lens-bg: rgba(255, 255, 255, 0.30);
+  --lens-bg-active: rgba(255, 255, 255, 0.92);
+  --lens-border: 1rpx solid rgba(255, 255, 255, 0.65);
+  --lens-text: var(--color-text-sub);
+  --lens-text-active: var(--color-primary);
 
   /* ---------- 审核状态色（绿 / 黄 / 红） ---------- */
-  --status-approved: #43905B;
-  --status-approved-bg: #E8F4EC;
-  --status-pending: #B07B1A;
-  --status-pending-bg: #FBF1D9;
+  --status-approved: #3D8B55;
+  --status-approved-bg: rgba(80, 170, 110, 0.16);
+  --status-pending: #A8740F;
+  --status-pending-bg: rgba(230, 175, 60, 0.18);
   --status-rejected: #C2453A;
-  --status-rejected-bg: #FAE7E3;
+  --status-rejected-bg: rgba(210, 90, 70, 0.14);
 
   /* ---------- 间距与圆角 ---------- */
   --space-xs: 8px;
   --space-sm: 12px;
   --space-md: 16px;
   --space-lg: 24px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --shadow-card: 0 4rpx 16rpx rgba(96, 70, 44, 0.07);
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  /* 分层投影：环境光 + 定向光 + 顶部内高光，模拟真实玻璃悬浮 */
+  --shadow-card: 0 2rpx 8rpx rgba(60, 70, 110, 0.05),
+                 0 16rpx 48rpx rgba(60, 70, 110, 0.10),
+                 inset 0 1rpx 0 rgba(255, 255, 255, 0.85);
+  --shadow-float: 0 4rpx 12rpx rgba(60, 70, 110, 0.08),
+                  0 32rpx 80rpx rgba(60, 70, 110, 0.16),
+                  inset 0 1rpx 0 rgba(255, 255, 255, 0.95);
 
   font-size: var(--font-base);
   color: var(--color-text);
-  background-color: var(--color-bg);
+  /* 极光柔彩底（保持原配色），为透镜玻璃提供折射底色 */
+  background:
+    radial-gradient(ellipse 90% 55% at 12% -6%, rgba(255, 199, 160, 0.55), transparent 62%),
+    radial-gradient(ellipse 75% 45% at 95% 12%, rgba(186, 196, 255, 0.50), transparent 60%),
+    radial-gradient(ellipse 80% 50% at 88% 78%, rgba(255, 214, 190, 0.45), transparent 62%),
+    radial-gradient(ellipse 70% 42% at 4% 92%, rgba(190, 226, 210, 0.42), transparent 60%),
+    linear-gradient(165deg, #FBF7F0 0%, #F4F1F8 52%, #EFF4F2 100%);
+  background-attachment: fixed;
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
 }
 
-/* ---------- 大字模式（Z-10：≥22px），页面根节点挂 .font-large ---------- */
+/* ---------- 大字模式（适老化 Z-10：正文 ≥22px），页面根节点挂 .font-large ---------- */
 .font-large {
-  --font-sm: 22px;
+  --font-sm: 20px;
   --font-base: 22px;
   --font-lg: 25px;
   --font-xl: 30px;
   --font-xxl: 40px;
+  /* 根节点自身也设字号，未显式声明 font-size 的后代可继承放大 */
+  font-size: var(--font-base);
 }
 
 /* ---------- 通用容器 ---------- */
@@ -85,12 +118,28 @@ page {
   justify-content: center;
 }
 
-/* ---------- 卡片 ---------- */
+/* ---------- 玻璃卡片（带顶部高光发丝线 + 斜向镜面反光） ---------- */
 .card {
-  background-color: var(--color-card);
+  position: relative;
+  background-color: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+}
+
+/* 镜面反光：左上至右下的极淡斜向光泽，玻璃通透感的关键 */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 45%);
+  pointer-events: none;
 }
 
 /* ---------- 按钮 ---------- */
@@ -100,13 +149,14 @@ page {
   justify-content: center;
   min-height: var(--touch-min);
   padding: 0 var(--space-lg);
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%);
   color: #ffffff;
   font-size: var(--font-base);
   font-weight: 600;
-  border-radius: var(--radius-sm);
+  border-radius: 999rpx;
   border: none;
   line-height: 1.4;
+  box-shadow: 0 8rpx 24rpx rgba(200, 75, 49, 0.32), inset 0 1rpx 0 rgba(255, 255, 255, 0.45);
 }
 
 .btn-primary::after {
@@ -123,19 +173,22 @@ page {
   justify-content: center;
   min-height: var(--touch-min);
   padding: 0 var(--space-lg);
-  background-color: var(--color-card);
+  background-color: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   color: var(--color-text-sub);
   font-size: var(--font-base);
-  border-radius: var(--radius-sm);
-  border: 2rpx solid var(--color-border);
+  border-radius: 999rpx;
+  border: var(--glass-border);
   line-height: 1.4;
+  box-shadow: var(--shadow-card);
 }
 
 .btn-ghost::after {
   border: none;
 }
 
-/* ---------- 审核状态标签（绿 / 黄 / 红） ---------- */
+/* ---------- 审核状态标签（绿 / 黄 / 红 · 玻璃质感） ---------- */
 .tag {
   display: inline-flex;
   align-items: center;
@@ -144,21 +197,26 @@ page {
   border-radius: 999rpx;
   line-height: 1.5;
   white-space: nowrap;
+  backdrop-filter: blur(12rpx);
+  -webkit-backdrop-filter: blur(12rpx);
 }
 
 .tag-approved {
   color: var(--status-approved);
   background-color: var(--status-approved-bg);
+  border: 1rpx solid rgba(80, 170, 110, 0.28);
 }
 
 .tag-pending {
   color: var(--status-pending);
   background-color: var(--status-pending-bg);
+  border: 1rpx solid rgba(230, 175, 60, 0.32);
 }
 
 .tag-rejected {
   color: var(--status-rejected);
   background-color: var(--status-rejected-bg);
+  border: 1rpx solid rgba(210, 90, 70, 0.28);
 }
 
 /* ---------- 区块标题 ---------- */
@@ -173,6 +231,7 @@ page {
   font-size: var(--font-lg);
   font-weight: 700;
   color: var(--color-text);
+  letter-spacing: 1rpx;
 }
 
 .section-extra {
@@ -191,7 +250,7 @@ page {
   color: var(--color-text-weak);
 }
 
-/* ---------- 头像占位（首字母圆形） ---------- */
+/* ---------- 头像占位（首字母圆形 · 玻璃光晕） ---------- */
 .avatar-ph {
   display: flex;
   align-items: center;
@@ -201,6 +260,7 @@ page {
   font-weight: 700;
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 6rpx 18rpx rgba(200, 75, 49, 0.28), inset 0 1rpx 0 rgba(255, 255, 255, 0.4);
 }
 
 /* ---------- 封面占位（演示数据：渐变 + 分类 emoji） ---------- */
@@ -244,6 +304,16 @@ page {
   font-weight: 700;
   pointer-events: none;
   animation: like-float 0.7s ease-out forwards;
+}
+
+/* ---------- 卡片浮现入场（玻璃版微动效） ---------- */
+@keyframes rise-in {
+  0% { transform: translateY(24rpx); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.rise-in {
+  animation: rise-in 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) both;
 }
 
 /* ---------- 底部安全区 ---------- */

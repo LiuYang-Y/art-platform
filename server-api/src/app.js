@@ -47,9 +47,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 静态托管用户上传的作品图片：server-api/uploads
+// ⚠️ 云函数容器（SCF）除 /tmp 外为只读文件系统，mkdir 必须容错，
+//    否则应用启动即抛 ENOENT/EROFS，整个函数返回 443 不可用。
 const UPLOAD_DIR = path.join(__dirname, '../uploads');
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+} catch (e) {
+  console.warn('[app] 本地 uploads 目录不可写（只读文件系统），图片将统一走云存储:', e.code || e.message);
 }
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
 

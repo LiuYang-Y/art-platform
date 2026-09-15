@@ -1,26 +1,46 @@
 /* 沐光·美育 管理平台 全局样式
-   主色：靛蓝 #3D5A80 / #2F4A73；侧边栏深靛蓝 #243B55 → #1F2B3A
-   内容区白卡片、清爽排版 */
+   2026 改版 · iOS 液态玻璃（Liquid Glass）：
+   极光柔彩渐变底 + 半透明磨砂玻璃卡片（backdrop-filter）
+   + 高光描边 + 分层悬浮阴影；主色靛蓝，点缀赭红（呼应小程序） */
 
 :root {
   --brand: #3D5A80;
   --brand-deep: #243B55;
   --brand-ink: #1F2B3A;
-  --brand-light: #EEF2F8;
+  --brand-light: rgba(61, 90, 128, 0.10);
   --accent: #C84B31; /* 赭红点缀，呼应小程序 */
   --ok: #2E9E6B;
   --warn: #E8853D;
   --page-bg: #F4F6FA;
-  --card: #fff;
+  --card: rgba(255, 255, 255, 0.60);
+  --card-strong: rgba(255, 255, 255, 0.78);
   --text: #2B3440;
   --text-sub: #6B7684;
-  --border: #E4E9F0;
+  --border: rgba(255, 255, 255, 0.70);
+  --line: rgba(70, 90, 115, 0.10);
+
+  /* 玻璃材质（iOS Backdrop 级：重模糊 + 饱和度提升 + 分层投影 + 顶部高光） */
+  --glass-bg: rgba(255, 255, 255, 0.52);
+  --glass-blur: blur(30px) saturate(200%);
+  --glass-blur-soft: blur(16px) saturate(180%);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.62);
+  --glass-shadow: 0 2px 8px rgba(40, 55, 95, 0.05),
+                  0 18px 48px rgba(40, 55, 95, 0.11),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --glass-shadow-float: 0 4px 12px rgba(40, 55, 95, 0.08),
+                        0 36px 88px rgba(40, 55, 95, 0.18),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.95);
 
   --el-color-primary: #3D5A80;
   --el-color-success: #2E9E6B;
   --el-color-warning: #E8853D;
   --el-color-danger: #C84B31;
-  --el-border-radius-base: 8px;
+  --el-border-radius-base: 10px;
+  --el-bg-color: transparent;
+  --el-fill-color-blank: rgba(255, 255, 255, 0.55);
+  --el-border-color: rgba(70, 90, 115, 0.16);
+  --el-border-color-light: rgba(70, 90, 115, 0.12);
+  --el-border-color-lighter: rgba(70, 90, 115, 0.08);
 
   font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -29,14 +49,38 @@
 
 * { box-sizing: border-box; }
 html, body, #app { height: 100%; margin: 0; padding: 0; }
-body { background: var(--page-bg); color: var(--text); font-size: 14px; }
 
-/* 通用卡片 */
+body {
+  color: var(--text);
+  font-size: 14px;
+  /* 极光柔彩底：多层径向渐变，无需图片素材 */
+  background:
+    radial-gradient(ellipse 60% 45% at 8% -8%, rgba(255, 196, 150, 0.42), transparent 62%),
+    radial-gradient(ellipse 55% 42% at 96% 6%, rgba(160, 180, 250, 0.40), transparent 60%),
+    radial-gradient(ellipse 58% 46% at 92% 88%, rgba(255, 205, 175, 0.36), transparent 62%),
+    radial-gradient(ellipse 50% 40% at 2% 96%, rgba(165, 215, 195, 0.34), transparent 60%),
+    linear-gradient(160deg, #F8F6F1 0%, #F1F2F8 55%, #EDF3F1 100%);
+  background-attachment: fixed;
+}
+
+/* ---------- 通用玻璃卡片（顶部高光 + 镜面反光） ---------- */
 .page-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
   padding: 20px 24px;
+  overflow: hidden;
+}
+.page-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0) 45%);
+  pointer-events: none;
 }
 .page-title {
   font-size: 18px;
@@ -48,4 +92,133 @@ body { background: var(--page-bg); color: var(--text); font-size: 14px; }
   font-size: 13px;
   color: var(--text-sub);
   margin: 0 0 16px;
+}
+
+/* ---------- Element Plus 玻璃化覆盖 ---------- */
+
+/* 按钮：主色渐变胶囊 */
+.el-button--primary {
+  background: linear-gradient(135deg, #4F6F9F, var(--brand)) !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(61, 90, 128, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.el-button--primary:hover {
+  opacity: 0.92;
+  background: linear-gradient(135deg, #4F6F9F, var(--brand-deep)) !important;
+}
+.el-button--primary.is-plain {
+  background: rgba(61, 90, 128, 0.10) !important;
+  border: 1px solid rgba(61, 90, 128, 0.30) !important;
+  color: var(--brand) !important;
+  box-shadow: none;
+}
+/* 文字按钮 / 链接按钮必须豁免上面的实心渐变底：
+   它们同样带 el-button--primary，若被强制上主色底，文字与底色同色 → 按钮「消失」 */
+.el-button--primary.is-link,
+.el-button--primary.is-text {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--brand) !important;
+}
+.el-button--primary.is-link:hover,
+.el-button--primary.is-text:hover {
+  background: rgba(61, 90, 128, 0.10) !important;
+  color: var(--brand-deep) !important;
+}
+.el-button--primary.is-link.is-disabled,
+.el-button--primary.is-text.is-disabled {
+  background: transparent !important;
+  color: var(--text-sub) !important;
+}
+.el-button {
+  border-radius: 10px;
+}
+.el-button--danger.is-plain {
+  background: rgba(200, 75, 49, 0.08) !important;
+}
+
+/* 输入框 / 选择器：半透玻璃底 */
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  background: rgba(255, 255, 255, 0.60) !important;
+  box-shadow: 0 0 0 1px rgba(70, 90, 115, 0.14) inset !important;
+  border-radius: 10px;
+}
+.el-input__wrapper.is-focus,
+.el-select__wrapper.is-focused {
+  box-shadow: 0 0 0 1px var(--brand) inset !important;
+}
+
+/* 表格：透明底 + 玻璃表头 */
+.el-table {
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-header-bg-color: rgba(255, 255, 255, 0.55);
+  --el-table-border-color: var(--line);
+  --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.65);
+  background: transparent;
+}
+.el-table th.el-table__cell {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+/* 弹窗 / 抽屉 / 卡片：磨砂玻璃 */
+.el-dialog,
+.el-drawer,
+.el-message-box,
+.el-card {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow-float);
+}
+.el-overlay {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* 下拉菜单 / 气泡 */
+.el-dropdown-menu,
+.el-popper.is-light,
+.el-select__popper.el-popper {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow-float);
+}
+
+/* 标签：柔和玻璃色 */
+.el-tag {
+  border-radius: 999px;
+}
+
+/* 分页 */
+.el-pagination {
+  --el-pagination-bg-color: rgba(255, 255, 255, 0.55);
+  --el-pagination-button-disabled-bg-color: rgba(255, 255, 255, 0.35);
+  --el-pagination-hover-color: var(--brand);
+}
+.el-pagination .btn-prev,
+.el-pagination .btn-next,
+.el-pagination .el-pager li {
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* 空状态与加载更通透 */
+.el-loading-mask {
+  background-color: rgba(248, 247, 244, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
